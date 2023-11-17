@@ -3,12 +3,15 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1-amd64
     environment:
       discovery.type: single-node
-      ELASTIC_PASSWORD: elastic
+      xpack.security.enabled: false
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1-amd64
     ports:
       - 5601:5601
+    environment:
+      ELASTICSEARCH_HOSTS: http://elastic:9200
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: min-32-byte-long-NEW-encryption-key
 
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
