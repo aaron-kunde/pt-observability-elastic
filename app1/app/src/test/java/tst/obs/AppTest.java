@@ -4,9 +4,7 @@
 package tst.obs;
 
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.boot.test.context.SpringBootTest;
-import tst.obs.App;
 
 @SpringBootTest
 class AppTest {
