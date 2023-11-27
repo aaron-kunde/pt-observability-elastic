@@ -1,0 +1,37 @@
+* Description
+This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example applications, written in Java and Go to test the following aspects:
+- Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]]
+- Using Elastic Stack for logging and collecting metrics and telemetry
+- Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]]
+
+* Start
+1. To run the example, type:
+#+begin_src sh
+  podman-compose up -d
+#+end_src
+
+2. Verify, filebeat indices exists, running:
+#+begin_src sh
+  podman-compose exec elasticsearch curl localhost:9200/_cat/indices
+#+end_src
+Should return something like
+#+begin_example
+yellow open .ds-filebeat-8.11.1-2023.11.27-000001 H2R0iZ3hSaOLA8b5IcfvTQ 1 1 3714 0 383kb 383kb 383kb
+#+end_example
+and logs should be visible in Kibana: http://localhost:5601/app/observability/overview 
+
+* Setup
+** Elasticsearch
+The setup is based on [[https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html][Install Elasticsearch with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
+- No security
+- No persistence
+- Only one single node is used
+
+** Kibana
+The setup is based on [[https://www.elastic.co/guide/en/kibana/current/docker.html][Install Kibana with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
+- No security
+- No persistence
+- Setting of ~xpack.encryptedSavedObjects.encryptionKey~ to avoid loosing functionality, descibed in [[https://www.elastic.co/guide/en/kibana/current/xpack-security-secure-saved-objects.html][Secure saved objects]].
+
+** Filebeat
+The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] but not using a volume-mounted ~filebeat.yml~.
