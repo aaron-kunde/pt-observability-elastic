@@ -12,6 +12,17 @@ services:
     environment:
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: min-32-byte-long-NEW-encryption-key
 
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.1-amd64
+    command: |
+     filebeat
+     -e
+     --strict.perms=false
+     -E output.elasticsearch.hosts=["elasticsearch:9200"]
+     -E filebeat.inputs.0.type=filestream
+     -E filebeat.inputs.0.enabled=true
+     -E filebeat.inputs.0.paths=/var/log/*.log
+
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
     volumes:
