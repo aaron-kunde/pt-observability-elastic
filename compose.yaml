@@ -14,12 +14,14 @@ services:
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:8.11.1-amd64
+    volumes:
+      - app_logs:/var/log/app_logs
     command: |
      filebeat
      -e
      -E filebeat.inputs.0.type=filestream
      -E filebeat.inputs.0.enabled=true
-     -E filebeat.inputs.0.paths=/var/log/*.log
+     -E filebeat.inputs.0.paths=/var/log/app_logs/*.log
 
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
@@ -50,12 +52,16 @@ services:
       - 8081:8080
     build:
       context: ./app1/app
+    volumes:
+      - app_logs:/var/log/app_logs
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/opt/opentelemetry-javaagent.jar"
       OTEL_TRACES_EXPORTER: logging
       OTEL_METRICS_EXPORTER: logging
       OTEL_LOGS_EXPORTER: logging
+      LOGGING_FILE_NAME: /var/log/app_logs/app1.log
 
 volumes:
   kafka_data:
     driver: local
+  app_logs:
