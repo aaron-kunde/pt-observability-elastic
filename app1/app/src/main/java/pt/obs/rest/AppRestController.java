@@ -1,4 +1,4 @@
-package tst.obs.rest;
+package pt.obs.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;

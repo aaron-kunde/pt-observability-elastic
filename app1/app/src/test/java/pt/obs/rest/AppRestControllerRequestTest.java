@@ -1,4 +1,4 @@
-package tst.obs.rest;
+package pt.obs.rest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
