@@ -15,7 +15,7 @@ plugins {
     id 'io.freefair.lombok' version '8.4'
 }
 
-group 'tst.obs'
+group 'pt.observability.elastic'
 version '0.0.1-SNAPSHOT'
 
 repositories {
