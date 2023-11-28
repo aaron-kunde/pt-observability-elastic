@@ -1,8 +1,8 @@
 * Description
 This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example applications, written in Java and Go to test the following aspects:
 - Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]]
-- Using Elastic Stack for logging and collecting metrics and telemetry
-- Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]]
+- Using Elastic Stack for logging and collecting metrics and telemetry data
+- Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]] on [[https://kafka.apache.org/][Apache Kafka]]
 
 * Start
 1. To run the example, type:
@@ -25,13 +25,37 @@ and logs should be visible in Kibana: http://localhost:5601/app/observability/ov
 The setup is based on [[https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html][Install Elasticsearch with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
 - No security
 - No persistence
-- Only one single node is used
+- Use only one single node
 
 ** Kibana
 The setup is based on [[https://www.elastic.co/guide/en/kibana/current/docker.html][Install Kibana with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
 - No security
 - No persistence
 - Setting of ~xpack.encryptedSavedObjects.encryptionKey~ to avoid loosing functionality, descibed in [[https://www.elastic.co/guide/en/kibana/current/xpack-security-secure-saved-objects.html][Secure saved objects]].
+http://localhost:5601/
 
 ** Filebeat
-The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] but not using a volume-mounted ~filebeat.yml~.
+The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] but:
+- Not using a volume-mounted ~filebeat.yml~
+- Since Filebeat [[https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, log files are shared, using volumes
+
+* TODO Kafka
+Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-compose.yml
+
+* AKHQ
+[[https://akhq.io/][ALHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
+http://localhost:8080
+
+* App1 (Java SpringBoot + Logback)
+A simple Spring-Boot application without simple OpenTelemetry [[https://opentelemetry.io/docs/instrumentation/java/automatic][Automatic Instrumentation]].
+Writes logs to shared volume, so that filebeat can access them
+https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html
+curl localhost:8080/api-1
+- Application-Logs are sent to elastic by filebeat
+- Telemetry data as log are not sent into file
+
+* App2 
+Like App1, but uses for JSON-Formatting
+https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html
+https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html
+Creates additional JSON-Log, which has more Details for Elastic

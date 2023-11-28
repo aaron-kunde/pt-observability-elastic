@@ -21,7 +21,11 @@ services:
      -e
      -E filebeat.inputs.0.type=filestream
      -E filebeat.inputs.0.enabled=true
-     -E filebeat.inputs.0.paths=/var/log/app_logs/*.log
+     -E filebeat.inputs.0.paths=/var/log/app_logs/app1.log
+     -E filebeat.inputs.0.paths=/var/log/app_logs/app2.log.json
+     -E filebeat.inputs.0.parsers.0.ndjson.overwrite_keys=true
+     -E filebeat.inputs.0.parsers.0.ndjson.add_error_key=true
+     -E filebeat.inputs.0.parsers.0.ndjson.expand_keys=true
 
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
@@ -55,7 +59,20 @@ services:
     volumes:
       - app_logs:/var/log/app_logs
     environment:
+      SPRING_APPLICATION_NAME: app1
       LOGGING_FILE_NAME: /var/log/app_logs/app1.log
+
+  app2:
+    image: app1:latest
+    ports:
+      - 8082:8080
+    build:
+      context: ./apps/app2
+    volumes:
+      - app_logs:/var/log/app_logs
+    environment:
+      SPRING_APPLICATION_NAME: app2
+      LOGGING_FILE_NAME: /var/log/app_logs/app2.log
 
 volumes:
   kafka_data:

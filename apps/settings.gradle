@@ -9,4 +9,4 @@
  */
 
 rootProject.name = 'apps'
-include('app1')
+include('app1', 'app2')
