@@ -51,7 +51,7 @@ services:
     ports:
       - 8081:8080
     build:
-      context: ./app1/app
+      context: ./apps/app1
     volumes:
       - app_logs:/var/log/app_logs
     environment:

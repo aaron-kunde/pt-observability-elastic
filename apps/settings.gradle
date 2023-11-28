@@ -8,5 +8,5 @@
  * This project uses @Incubating APIs which are subject to change.
  */
 
-rootProject.name = 'app1'
-include('app')
+rootProject.name = 'apps'
+include('app1')
