@@ -55,10 +55,6 @@ services:
     volumes:
       - app_logs:/var/log/app_logs
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/opt/opentelemetry-javaagent.jar"
-      OTEL_TRACES_EXPORTER: logging
-      OTEL_METRICS_EXPORTER: logging
-      OTEL_LOGS_EXPORTER: logging
       LOGGING_FILE_NAME: /var/log/app_logs/app1.log
 
 volumes:
