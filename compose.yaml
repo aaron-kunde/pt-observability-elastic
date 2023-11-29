@@ -69,7 +69,7 @@ services:
       LOGGING_FILE_NAME: /var/log/app_logs/app1.log
 
   app2:
-    image: app1:latest
+    image: app2:latest
     ports:
       - 8082:8080
     build:
