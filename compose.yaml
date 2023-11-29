@@ -27,6 +27,12 @@ services:
      -E filebeat.inputs.0.parsers.0.ndjson.add_error_key=true
      -E filebeat.inputs.0.parsers.0.ndjson.expand_keys=true
 
+  metricbeat:
+    image: docker.elastic.co/beats/metricbeat:8.11.1-amd64
+    command: |
+      metricbeat
+      -e
+
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
     volumes:
