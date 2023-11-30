@@ -4,6 +4,11 @@ This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example
 - Using Elastic Stack for logging and collecting metrics and telemetry data
 - Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]] on [[https://kafka.apache.org/][Apache Kafka]]
 
+* Build
+#+begin_src sh
+  gradle build -p apps
+  podman-compose build
+#+end_src
 * Start
 1. To run the example, type:
 #+begin_src sh
