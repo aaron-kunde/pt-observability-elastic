@@ -22,8 +22,10 @@ This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example
 Should return something like
 #+begin_example
 yellow open .ds-filebeat-8.11.1-2023.11.27-000001 H2R0iZ3hSaOLA8b5IcfvTQ 1 1 3714 0 383kb 383kb 383kb
+yellow open .ds-metricbeat-8.11.1-2023.11.28-000001 XGlsKCI3QXqS6mYo-3zJrg 1 1 208 0   1.4mb   1.4mb   1.4mb
 #+end_example
-and logs should be visible in Kibana: http://localhost:5601/app/observability/overview 
+Logs and metrics should be visible in Kibana: http://localhost:5601/app/observability/overview
+
 
 * Setup
 ** Elasticsearch
@@ -40,9 +42,14 @@ The setup is based on [[https://www.elastic.co/guide/en/kibana/current/docker.ht
 http://localhost:5601/
 
 ** Filebeat
-The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] but:
+The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] with the following adjustments:
 - Not using a volume-mounted ~filebeat.yml~
 - Since Filebeat [[https://www.elastic.co/guide/en/beats/filebeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, log files are shared, using volumes
+
+** Metricbeat
+The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current/running-on-docker.html][Run Metricbeat on Docker]] with the following adjustments:
+- Not using a volume-mounted ~metricbeat.yml~
+- Since Metricbeat [[https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, metric sources are configured indiviually
 
 * TODO Kafka
 Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-compose.yml
