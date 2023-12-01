@@ -74,9 +74,12 @@ A simple Spring-Boot application:
   curl localhost:8081/api-2
 #+end_example
 
-* App2 (Java SpringBoot + Logback + ECS Logging)
+* App2 (Java SpringBoot + Logback + ECS Logging + Prometheus)
 Like [[* App1][App1]], but
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
+- Logs are written in the default format to stdout like in App1
+- Logs are written in JSON format to a file, if application runs in a container 
+- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]
 This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 ** APIs
 *** Success logging
@@ -91,8 +94,3 @@ This saves filebeat resources, since it must not transform the logs into JSON an
 
 - Telemetry data as log are not sent into file
 
-* App2 
-Like App1, but uses for JSON-Formatting
-https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html
-https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html
-Creates additional JSON-Log, which has more Details for Elastic
