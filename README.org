@@ -59,11 +59,36 @@ Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-co
 http://localhost:8080
 
 * App1 (Java SpringBoot + Logback)
-A simple Spring-Boot application without simple OpenTelemetry [[https://opentelemetry.io/docs/instrumentation/java/automatic][Automatic Instrumentation]].
-Writes logs to shared volume, so that filebeat can access them
-https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html
-curl localhost:8080/api-1
+A simple Spring-Boot application:
+- Writes logs to shared volume, so that filebeat can access them
+- Uses default [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.simple][simple exporter]] to populate [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html][Spring Boot Actuator]] default metrics over HTTP
 - Application-Logs are sent to elastic by filebeat
+** APIs
+*** Success logging
+#+begin_example sh
+  curl localhost:8081/api-1
+#+end_example
+
+*** Logging unenxpected errors / stacktraces
+#+begin_example sh
+  curl localhost:8081/api-2
+#+end_example
+
+* App2 (Java SpringBoot + Logback + ECS Logging)
+Like [[* App1][App1]], but
+- Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
+This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
+** APIs
+*** Success logging
+#+begin_example sh
+  curl localhost:8081/api-1
+#+end_example
+
+*** Logging unenxpected errors / stacktraces
+#+begin_example sh
+  curl localhost:8081/api-2
+#+end_example
+
 - Telemetry data as log are not sent into file
 
 * App2 
