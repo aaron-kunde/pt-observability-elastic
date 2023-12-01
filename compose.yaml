@@ -19,13 +19,16 @@ services:
     command: |
      filebeat
      -e
+     -E filebeat.inputs.0.id=plain_logs
      -E filebeat.inputs.0.type=filestream
      -E filebeat.inputs.0.enabled=true
      -E filebeat.inputs.0.paths=/var/log/app_logs/app1.log
-     -E filebeat.inputs.0.paths=/var/log/app_logs/app2.log.json
-     -E filebeat.inputs.0.parsers.0.ndjson.overwrite_keys=true
-     -E filebeat.inputs.0.parsers.0.ndjson.add_error_key=true
-     -E filebeat.inputs.0.parsers.0.ndjson.expand_keys=true
+     -E filebeat.inputs.1.id=json_logs
+     -E filebeat.inputs.1.type=filestream
+     -E filebeat.inputs.1.paths=/var/log/app_logs/app2.log.json
+     -E filebeat.inputs.1.parsers.0.ndjson.overwrite_keys=true
+     -E filebeat.inputs.1.parsers.0.ndjson.add_error_key=true
+     -E filebeat.inputs.1.parsers.0.ndjson.expand_keys=true
 
   metricbeat:
     image: docker.elastic.co/beats/metricbeat:8.11.1-amd64
