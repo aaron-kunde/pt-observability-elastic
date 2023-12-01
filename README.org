@@ -50,6 +50,8 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/r
 The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current/running-on-docker.html][Run Metricbeat on Docker]] with the following adjustments:
 - Not using a volume-mounted ~metricbeat.yml~
 - Since Metricbeat [[https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, metric sources are configured indiviually
+- Try to get metrics from App1, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-http.html][HTTP module]]. Data is accessible in Kibana in the Metrics Explorer by ~http.app1.names~
+- Collect metrics from App2, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-prometheus.html][Prometheus module]].
 
 * TODO Kafka
 Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-compose.yml
