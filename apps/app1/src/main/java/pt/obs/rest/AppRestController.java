@@ -10,6 +10,14 @@ public class AppRestController {
 
     @GetMapping("/api-1")
     void api1() {
-        log.info("Calling api 1");
+        log.info("Calling API 1");
     }
+
+    @GetMapping("/api-2")
+    void api2() {
+        log.info("Calling API 2");
+
+        throw new RuntimeException("An unexpected error occurred");
+    }
+
 }
