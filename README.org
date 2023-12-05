@@ -52,6 +52,8 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current
 - Since Metricbeat [[https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, metric sources are configured indiviually
 - Try to get metrics from App1, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-http.html][HTTP module]]. Data is accessible in Kibana in the Metrics Explorer by ~http.app1.names~
 - Collect metrics from App2, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-prometheus.html][Prometheus module]].
+- Added some tags for experimenting
+
 
 * TODO Kafka
 Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-compose.yml
@@ -93,6 +95,7 @@ This saves filebeat resources, since it must not transform the logs into JSON an
 #+begin_example sh
   curl localhost:8081/api-2
 #+end_example
+Calling this API will increase the metric ~prometheus.metrics.logback_events_total~
 
 - Telemetry data as log are not sent into file
 
