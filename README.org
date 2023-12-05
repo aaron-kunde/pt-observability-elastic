@@ -97,5 +97,21 @@ This saves filebeat resources, since it must not transform the logs into JSON an
 #+end_example
 Calling this API will increase the metric ~prometheus.metrics.logback_events_total~
 
+* App3 (Java SpringBoot + Logback + ECS Logging + OpenTelemtry)
+Like [[* App2][App2]], but
+- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]]
+This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
+** APIs
+*** Success logging
+#+begin_example sh
+  curl localhost:8081/api-1
+#+end_example
+
+*** Logging unenxpected errors / stacktraces
+#+begin_example sh
+  curl localhost:8081/api-2
+#+end_example
+To analyze otel behaviour, start the applcation with ~Ddebug~.
+
 - Telemetry data as log are not sent into file
 
