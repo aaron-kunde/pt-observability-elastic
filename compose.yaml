@@ -1,19 +1,19 @@
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1-amd64
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}-amd64
     environment:
       discovery.type: single-node
       xpack.security.enabled: false
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1-amd64
+    image: docker.elastic.co/kibana/kibana:${ES_VERSION}-amd64
     ports:
       - 5601:5601
     environment:
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: min-32-byte-long-NEW-encryption-key
 
   filebeat:
-    image: docker.elastic.co/beats/filebeat:8.11.1-amd64
+    image: docker.elastic.co/beats/filebeat:${ES_VERSION}-amd64
     volumes:
       - app_logs:/var/log/app_logs
     command: |
@@ -31,7 +31,7 @@ services:
      -E filebeat.inputs.1.parsers.0.ndjson.expand_keys=true
 
   metricbeat:
-    image: docker.elastic.co/beats/metricbeat:8.11.1-amd64
+    image: docker.elastic.co/beats/metricbeat:${ES_VERSION}-amd64
     command: |
       metricbeat
       -e
