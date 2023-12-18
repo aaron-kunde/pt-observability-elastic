@@ -9,37 +9,57 @@ This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example
   gradle build -p apps
   podman-compose build
 #+end_src
+
 * Start
 1. To run the example, type:
 #+begin_src sh
   podman-compose up -d
 #+end_src
 
-2. Verify, filebeat indices exists, running:
+2. Verify, indices exists, running:
 #+begin_src sh
-  podman-compose exec elasticsearch curl localhost:9200/_cat/indices
+  podman-compose exec elasticsearch curl -uelastic:elastic localhost:9200/_cat/indices
 #+end_src
 Should return something like
 #+begin_example
-yellow open .ds-filebeat-8.11.1-2023.11.27-000001 H2R0iZ3hSaOLA8b5IcfvTQ 1 1 3714 0 383kb 383kb 383kb
-yellow open .ds-metricbeat-8.11.1-2023.11.28-000001 XGlsKCI3QXqS6mYo-3zJrg 1 1 208 0   1.4mb   1.4mb   1.4mb
+  yellow open .ds-metrics-apm.app.my_cool_service-default-2023.12.18-000001    GIk4rOWUSW-83Dux8P-9QA 1 1 1077 0 621.8kb 621.8kb 621.8kb
+  green  open .internal.alerts-observability.logs.alerts-default-000001        XprZtj8URBOKYokJ8v4Zjw 1 0    0 0    249b    249b    249b
+  yellow open .ds-filebeat-8.11.1-2023.12.18-000001                            5VmMauFFSrO192oG_CTEqg 1 1   52 0  59.7kb  59.7kb  59.7kb
+  yellow open .ds-metrics-apm.transaction.1m-default-2023.12.18-000001         -5Zfd60ASwqyutDbsFbpTA 1 1   32 0 151.3kb 151.3kb 151.3kb
+  green  open .internal.alerts-observability.uptime.alerts-default-000001      lMEZ9gBeSlm1-eZD9DDmuQ 1 0    0 0    249b    249b    249b
+  green  open .internal.alerts-ml.anomaly-detection.alerts-default-000001      A3SZoEHTQbmMvu0yrsGQpA 1 0    0 0    249b    249b    249b
+  yellow open .ds-metricbeat-8.11.1-2023.12.18-000001                          Qg4S8pyqRjm_n_9zFhMiLQ 1 1 4831 0   4.6mb   4.6mb   4.6mb
+  green  open .internal.alerts-observability.slo.alerts-default-000001         aUhRYcySTVG4xvFgDYIxyQ 1 0    0 0    249b    249b    249b
+  green  open .internal.alerts-observability.apm.alerts-default-000001         ybVpTm89Qvu-WkOggqxhZQ 1 0    0 0    249b    249b    249b
+  green  open .internal.alerts-observability.metrics.alerts-default-000001     znDAc5kTT2eBhxev-SSb1g 1 0    0 0    249b    249b    249b
+  green  open .kibana-observability-ai-assistant-conversations-000001          hOoMHEwRTzO9II4W2NSorw 1 0    0 0    249b    249b    249b
+  yellow open .ds-traces-apm-default-2023.12.18-000001                         dO7NwXXjSjqDODOznEa78A 1 1  100 0 585.5kb 585.5kb 585.5kb
+  yellow open .ds-metrics-apm.internal-default-2023.12.18-000001               9VmoxBqSTyyvAy_0Wa4yxA 1 1  442 0 389.1kb 389.1kb 389.1kb
+  green  open .internal.alerts-observability.threshold.alerts-default-000001   53dnDJcgTFeUvwuAJywXag 1 0    0 0    249b    249b    249b
+  green  open .kibana-observability-ai-assistant-kb-000001                     Ito5c5g7SWCC2tcaeG4C9A 1 0    0 0    249b    249b    249b
+  yellow open .ds-metrics-apm.service_summary.1m-default-2023.12.18-000001     ShfRjk3oTIKNFZCR9nttyA 1 1   32 0  71.2kb  71.2kb  71.2kb
+  green  open .internal.alerts-security.alerts-default-000001                  _bwsTDaURZG-gXeD_IUrag 1 0    0 0    249b    249b    249b
+  yellow open .ds-metrics-apm.app.apm_server-default-2023.12.18-000001         0zg6IPGnSWmCGV44MrN-RA 1 1   52 0  86.6kb  86.6kb  86.6kb
+  yellow open .ds-metrics-apm.service_transaction.1m-default-2023.12.18-000001 iujgNMNVTPGWA1FTD3gZfg 1 1   32 0  93.3kb  93.3kb  93.3kb
+  green  open .internal.alerts-stack.alerts-default-000001                     lXiMpOJgTfKy5gUQGK9mlg 1 0    0 0    249b    249b    249b
 #+end_example
 Logs and metrics should be visible in Kibana: http://localhost:5601/app/observability/overview
-
 
 * Setup
 ** Elasticsearch
 The setup is based on [[https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html][Install Elasticsearch with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
-- No security
+- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.2/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
 - No persistence
 - Use only one single node
 
 ** Kibana
 The setup is based on [[https://www.elastic.co/guide/en/kibana/current/docker.html][Install Kibana with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
-- No security
+- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.2/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
 - No persistence
 - Setting of ~xpack.encryptedSavedObjects.encryptionKey~ to avoid loosing functionality, descibed in [[https://www.elastic.co/guide/en/kibana/current/xpack-security-secure-saved-objects.html][Secure saved objects]].
-http://localhost:5601/
+- Setting of ~xpack.fleet.packages~ to enable [[* APM][APM]]-App on startup.
+- Settings are set using [[https://www.elastic.co/guide/en/kibana/7.17/docker.html#environment-variable-config][environment variables]].
+- Kibana can be access using the URL: http://localhost:5601/
 
 ** Filebeat
 The setup is based on [[https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html][Run Filebeat on Docker]] with the following adjustments:
@@ -53,6 +73,9 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current
 - Try to get metrics from App1, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-http.html][HTTP module]]. Data is accessible in Kibana in the Metrics Explorer by ~http.app1.names~
 - Collect metrics from App2, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-prometheus.html][Prometheus module]].
 - Added some tags for experimenting
+
+** APM
+The setup is based on [[https://www.elastic.co/guide/en/apm/guide/current/running-on-docker.html][Run APM Server on Docker]]. For APM functions properly, Elastic security must be enabled on a minimum scale.
 
 
 * TODO Kafka

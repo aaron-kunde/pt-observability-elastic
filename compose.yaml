@@ -36,6 +36,7 @@ services:
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: min-32-byte-long-NEW-encryption-key
       ELASTICSEARCH_USERNAME: kibana_system
       ELASTICSEARCH_PASSWORD: kibana_system
+      XPACK_FLEET_PACKAGES: '[{"name":"apm","version":"latest"}]'
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:${ES_VERSION}-amd64
@@ -77,6 +78,15 @@ services:
       -E metricbeat.modules.1.metrics_path=/actuator/prometheus
       -E metricbeat.modules.1.metricsets=[collector]
       -E 'metricbeat.modules.1.tags=[app2, tag2]'
+
+  apm-server:
+    image: docker.elastic.co/apm/apm-server:${ES_VERSION}-amd64
+    command: |
+      apm-server
+      -e
+      -E apm-server.host=apm-server:8200
+      -E output.elasticsearch.username=elastic
+      -E output.elasticsearch.password=elastic
 
   kafka:
     image: docker.io/bitnami/kafka:3.5.1-debian-11-r74
