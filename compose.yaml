@@ -3,7 +3,30 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${ES_VERSION}-amd64
     environment:
       discovery.type: single-node
-      xpack.security.enabled: false
+      xpack.security.enabled: true
+      ELASTIC_PASSWORD: elastic
+
+  elasticsearch-init:
+    image: docker.io/curlimages/curl:8.4.0
+    environment:
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: elastic
+      KIBANA_USERNAME: kibana_system
+      KIBANA_PASSWORD: kibana_system
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-s", "-u kibana_system:kibana_system", "elasticsearch:9200"]
+      interval: 1s
+      timeout: 5s
+      retries: 120
+    command: |
+      sh
+      -c '
+      echo "Setting kibana_system password";
+      until curl -v -X POST -u "elastic:elastic" -H "Content-Type: application/json" http://elasticsearch:9200/_security/user/kibana_system/_password -d "{\"password\":\"kibana_system\"}" | grep -q "^{}";
+      do sleep 10;
+      done;
+      echo "All done!"
+      '
 
   kibana:
     image: docker.elastic.co/kibana/kibana:${ES_VERSION}-amd64
@@ -11,11 +34,16 @@ services:
       - 5601:5601
     environment:
       XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: min-32-byte-long-NEW-encryption-key
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: kibana_system
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:${ES_VERSION}-amd64
     volumes:
       - app_logs:/var/log/app_logs
+    environment:
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: elastic
     command: |
       filebeat
       -e
@@ -32,6 +60,9 @@ services:
 
   metricbeat:
     image: docker.elastic.co/beats/metricbeat:${ES_VERSION}-amd64
+    environment:
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: elastic
     command: |
       metricbeat
       -e
