@@ -91,6 +91,7 @@ A simple Spring-Boot application:
 - Uses default [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.simple][simple exporter]] to populate [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html][Spring Boot Actuator]] default metrics over HTTP
 - Application-Logs are sent to elastic by filebeat
 - Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
+- Has tow custom metrics, which count the API-calls
 ** APIs
 *** Success logging
 #+begin_example sh
@@ -102,12 +103,22 @@ A simple Spring-Boot application:
   curl localhost:8081/api-2
 #+end_example
 
+** Metrics
+Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
+#+begin_src sh
+   curl localhost:8080/actuator/metrics/api.1.counter
+#+end_src
+the output will be something like
+#+begin_example
+{"name":"api.1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
+#+end_example
+
 * App2 (Java SpringBoot + Logback + ECS Logging + Prometheus + APM-Agent)
 Like [[* App1][App1]], but
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
 - Logs are written in the default format to stdout like in App1
 - Logs are written in JSON format to a file, if application runs in a container 
-- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]
+- Publish metrics using also [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]
 - Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
 This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 ** APIs
@@ -122,10 +133,23 @@ This saves filebeat resources, since it must not transform the logs into JSON an
 #+end_example
 Calling this API will increase the metric ~prometheus.metrics.logback_events_total~
 
+** Metrics
+Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
+#+begin_src sh
+  curl -s localhost:8080/actuator/prometheus | grep -e api_1
+#+end_src
+the output will be something like
+#+begin_example
+# HELP api_1_counter_total
+# TYPE api_1_counter_total counter
+api_1_counter_total{it_1="it-2",} 0.0
+#+end_example
+
+
 * App3 (Java SpringBoot + Logback + ECS Logging + OpenTelemtry)
 Like [[* App2][App2]], but
-- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]] instead of APM Java Agent
-This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
+- Publish metrics using [[https://opentelemetry.io/docs/instrumentation/java/automatic/][Automatic Instrumentation]] with an [[https://www.elastic.co/guide/en/apm/guide/current/open-telemetry-direct.html#instrument-apps-otel][OpenTelemetry Agent]] instead of an APM Java Agent or exporting the metrics with an [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]]. This means, that the custom metrics will not be collected!
+
 ** APIs
 *** Success logging
 #+begin_example sh
