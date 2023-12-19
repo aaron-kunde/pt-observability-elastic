@@ -11,4 +11,4 @@ RUN adduser -D -H -u 1000 app app \
 
 USER app
 
-CMD ["java", "-jar", "/opt/app/app.jar"]
+CMD java ${JAVA_OPTS} -jar /opt/app/app.jar

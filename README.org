@@ -48,13 +48,13 @@ Logs and metrics should be visible in Kibana: http://localhost:5601/app/observab
 * Setup
 ** Elasticsearch
 The setup is based on [[https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html][Install Elasticsearch with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
-- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.2/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
+- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.11/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
 - No persistence
 - Use only one single node
 
 ** Kibana
 The setup is based on [[https://www.elastic.co/guide/en/kibana/current/docker.html][Install Kibana with Docker]] and a simplified version of the [[https://github.com/elastic/elasticsearch/blob/8.11/docs/reference/setup/install/docker/docker-compose.yml][docker-compose]] example:
-- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.2/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
+- [[https://www.elastic.co/guide/en/elasticsearch/reference/8.11/security-minimal-setup.html][Minimal security]] to use [[* APM][APM]].
 - No persistence
 - Setting of ~xpack.encryptedSavedObjects.encryptionKey~ to avoid loosing functionality, descibed in [[https://www.elastic.co/guide/en/kibana/current/xpack-security-secure-saved-objects.html][Secure saved objects]].
 - Setting of ~xpack.fleet.packages~ to enable [[* APM][APM]]-App on startup.
@@ -85,11 +85,12 @@ Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-co
 [[https://akhq.io/][ALHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
 http://localhost:8080
 
-* App1 (Java SpringBoot + Logback)
+* App1 (Java SpringBoot + Logback + APM-Agent)
 A simple Spring-Boot application:
 - Writes logs to shared volume, so that filebeat can access them
 - Uses default [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.simple][simple exporter]] to populate [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html][Spring Boot Actuator]] default metrics over HTTP
 - Application-Logs are sent to elastic by filebeat
+- Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
 ** APIs
 *** Success logging
 #+begin_example sh
@@ -101,12 +102,13 @@ A simple Spring-Boot application:
   curl localhost:8081/api-2
 #+end_example
 
-* App2 (Java SpringBoot + Logback + ECS Logging + Prometheus)
+* App2 (Java SpringBoot + Logback + ECS Logging + Prometheus + APM-Agent)
 Like [[* App1][App1]], but
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
 - Logs are written in the default format to stdout like in App1
 - Logs are written in JSON format to a file, if application runs in a container 
 - Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]
+- Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
 This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 ** APIs
 *** Success logging
@@ -122,7 +124,7 @@ Calling this API will increase the metric ~prometheus.metrics.logback_events_tot
 
 * App3 (Java SpringBoot + Logback + ECS Logging + OpenTelemtry)
 Like [[* App2][App2]], but
-- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]]
+- Publish metrics using [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]] instead of APM Java Agent
 This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 ** APIs
 *** Success logging
