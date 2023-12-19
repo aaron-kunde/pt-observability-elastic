@@ -68,16 +68,18 @@ services:
       metricbeat
       -e
       -E metricbeat.modules.0.module=http
-      -E metricbeat.modules.0.namespace=app1
+      -E metricbeat.modules.0.namespace=ns-app1
       -E metricbeat.modules.0.hosts=[app1:8080]
       -E metricbeat.modules.0.path=/actuator/metrics
       -E metricbeat.modules.0.metricsets=[json]
-      -E 'metricbeat.modules.0.tags=[app1, tag1]'
+      -E metricbeat.modules.0.tags='[t-app1, t-tag1]'
+      -E metricbeat.modules.0.fields='{project: "f-p1", app: "f-app1"}'
       -E metricbeat.modules.1.module=prometheus
       -E metricbeat.modules.1.hosts=[app2:8080]
       -E metricbeat.modules.1.metrics_path=/actuator/prometheus
       -E metricbeat.modules.1.metricsets=[collector]
-      -E 'metricbeat.modules.1.tags=[app2, tag2]'
+      -E metricbeat.modules.1.tags='[t-app2, t-tag2]'
+      -E metricbeat.modules.1.fields='{project: "f-p1", app: "f-app2"}'
 
   apm-server:
     image: docker.elastic.co/apm/apm-server:${ES_VERSION}-amd64
