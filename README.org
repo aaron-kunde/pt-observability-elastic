@@ -72,7 +72,7 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current
 - Since Metricbeat [[https://www.elastic.co/guide/en/beats/metricbeat/current/configuration-autodiscover.html][autodiscover]] does not support Podman, metric sources are configured indiviually
 - Try to get metrics from App1, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-http.html][HTTP module]]. Data is accessible in Kibana in the Metrics Explorer by ~http.app1.names~
 - Collect metrics from App2, using [[https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-prometheus.html][Prometheus module]].
-- Added some tags for experimenting
+- Added some tags and fields for experimenting. These costs more ressources!
 
 ** APM
 The setup is based on [[https://www.elastic.co/guide/en/apm/guide/current/running-on-docker.html][Run APM Server on Docker]]. For APM functions properly, Elastic security must be enabled on a minimum scale.
@@ -148,7 +148,8 @@ api_1_counter_total{it_1="it-2",} 0.0
 
 * App3 (Java SpringBoot + Logback + ECS Logging + OpenTelemtry)
 Like [[* App2][App2]], but
-- Publish metrics using [[https://opentelemetry.io/docs/instrumentation/java/automatic/][Automatic Instrumentation]] with an [[https://www.elastic.co/guide/en/apm/guide/current/open-telemetry-direct.html#instrument-apps-otel][OpenTelemetry Agent]] instead of an APM Java Agent or exporting the metrics with an [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]]. This means, that the custom metrics will not be collected!
+- Publish metrics using [[https://opentelemetry.io/docs/instrumentation/java/automatic/][Automatic Instrumentation]] with an [[https://www.elastic.co/guide/en/apm/guide/current/open-telemetry-direct.html#instrument-apps-otel][OpenTelemetry Agent]] instead of an APM Java Agent or exporting the metrics with an [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]].
+- Using deployment pattern [[https://opentelemetry.io/docs/collector/deployment/no-collector/][No Collector]] to ship metrics directly to APM
 
 ** APIs
 *** Success logging
