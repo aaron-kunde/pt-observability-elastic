@@ -78,12 +78,16 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current
 The setup is based on [[https://www.elastic.co/guide/en/apm/guide/current/running-on-docker.html][Run APM Server on Docker]]. For APM functions properly, Elastic security must be enabled on a minimum scale.
 
 
-* TODO Kafka
-Based on https://github.com/bitnami/containers/blob/main/bitnami/kafka/docker-compose.yml
+* Kafka
+Based on [[https://github.com/bitnami/containers/blob/main/bitnami/kafka/3.5/debian-11/docker-compose.yml][Bitnami Containers]] with some adjustments:
+- No persistence
+- Added an additional external listener to get local development and akhq running (see: https://github.com/tchiotludo/akhq/issues/1085). This means:
+  - Kafka is external accessible using ~localhost:9092~
+  - and internal accessible using ~kafka:9094~
 
 * AKHQ
-[[https://akhq.io/][ALHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
-http://localhost:8080
+[[https://akhq.io/][AKHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
+[[http://localhost:9080]]
 
 * App1 (Java SpringBoot + Logback + APM-Agent)
 A simple Spring-Boot application:
