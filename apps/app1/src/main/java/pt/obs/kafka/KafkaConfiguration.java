@@ -9,7 +9,6 @@ import org.springframework.kafka.config.TopicBuilder;
 class KafkaConfiguration {
 
     static final String TOPIC_OUT = "topic1";
-    static final String TOPIC_IN = "topic2";
 
     @Bean
     public NewTopic topicOut() {
@@ -18,13 +17,4 @@ class KafkaConfiguration {
                 .partitions(1)
                 .build();
     }
-
-    @Bean
-    public NewTopic topicIn() {
-        return TopicBuilder.name(TOPIC_IN)
-                .replicas(1)
-                .partitions(1)
-                .build();
-    }
-
 }

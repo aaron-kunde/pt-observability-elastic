@@ -158,6 +158,7 @@ services:
     environment:
       SPRING_APPLICATION_NAME: app3
       LOGGING_FILE_NAME: /var/log/app_logs/app3.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
       JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/opentelemetry-javaagent.jar
       OTEL_SERVICE_NAME: app3
       OTEL_EXPORTER_OTLP_ENDPOINT: http://apm-server:8200
