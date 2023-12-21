@@ -1,6 +1,6 @@
 * Description
 This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example applications, written in Java and Go to test the following aspects:
-- Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]]
+- Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]] and [[https://www.elastic.co/de/observability][Elastic Observability]] 
 - Using Elastic Stack for logging and collecting metrics and telemetry data
 - Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]] on [[https://kafka.apache.org/][Apache Kafka]]
 
@@ -75,17 +75,18 @@ The setup is based on [[https://www.elastic.co/guide/en/beats/metricbeat/current
 - Added some tags and fields for experimenting. These costs more ressources!
 
 ** APM
-The setup is based on [[https://www.elastic.co/guide/en/apm/guide/current/running-on-docker.html][Run APM Server on Docker]]. For APM functions properly, Elastic security must be enabled on a minimum scale.
+The setup is based on [[https://www.elastic.co/guide/en/apm/guide/current/running-on-docker.html][Run APM Server on Docker]] with the following adjustments:
+- Not using a volume-mounted ~apm-server.yml~
+- For APM functions properly, Elastic security must be enabled on a minimum scale.
 
-
-* Kafka
+** Kafka
 Based on [[https://github.com/bitnami/containers/blob/main/bitnami/kafka/3.5/debian-11/docker-compose.yml][Bitnami Containers]] with some adjustments:
 - No persistence
 - Added an additional external listener to get local development and akhq running (see: https://github.com/tchiotludo/akhq/issues/1085). This means:
   - Kafka is external accessible using ~localhost:9092~
   - and internal accessible using ~kafka:9094~
 
-* AKHQ
+** AKHQ
 [[https://akhq.io/][AKHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
 [[http://localhost:9080]]
 
@@ -95,14 +96,18 @@ A simple Spring-Boot application:
 - Uses default [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.simple][simple exporter]] to populate [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html][Spring Boot Actuator]] default metrics over HTTP
 - Application-Logs are sent to elastic by filebeat
 - Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
-- Has tow custom metrics, which count the API-calls
+- Has custom metrics, which count the API-calls
+- Writes messages to Kafka topic ~topic1~
+- Reads messages from Kafka topic ~topic2~
+
 ** APIs
-*** Success logging
+*** Success
 #+begin_example sh
   curl localhost:8081/api-1
 #+end_example
+Writes a message to Kafka topic ~topic1~.
 
-*** Logging unenxpected errors / stacktraces
+*** Throwing unenxpected errors / stacktraces
 #+begin_example sh
   curl localhost:8081/api-2
 #+end_example
@@ -110,28 +115,31 @@ A simple Spring-Boot application:
 ** Metrics
 Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
 #+begin_src sh
-   curl localhost:8080/actuator/metrics/api.1.counter
+   curl localhost:8081/actuator/metrics/app1.api.1.counter
 #+end_src
 the output will be something like
 #+begin_example
-{"name":"api.1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
+{"name":"app1.api.1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
 #+end_example
 
 * App2 (Java SpringBoot + Logback + ECS Logging + Prometheus + APM-Agent)
 Like [[* App1][App1]], but
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
 - Logs are written in the default format to stdout like in App1
-- Logs are written in JSON format to a file, if application runs in a container 
+- Logs are written in JSON format to a file, if application runs in a container. This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 - Publish metrics using also [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]
 - Instrumented, using the [[https://www.elastic.co/guide/en/apm/agent/java/1.x/intro.html][APM Java Agent]]
-This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
+- Writes messages to Kafka topic ~topic2~
+- Reads messages from Kafka topic ~topic1~
+
 ** APIs
-*** Success logging
+*** Success
 #+begin_example sh
   curl localhost:8082/api-1
 #+end_example
+Writes a message to Kafka topic ~topic2~.
 
-*** Logging unenxpected errors / stacktraces
+*** Thrwoing unenxpected errors / stacktraces
 #+begin_example sh
   curl localhost:8082/api-2
 #+end_example
