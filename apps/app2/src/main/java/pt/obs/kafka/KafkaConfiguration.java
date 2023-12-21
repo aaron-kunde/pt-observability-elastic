@@ -8,8 +8,8 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 class KafkaConfiguration {
 
-    static final String TOPIC_OUT = "topic1";
-    static final String TOPIC_IN = "topic2";
+    static final String TOPIC_OUT = "topic2";
+    static final String TOPIC_IN = "topic1";
 
     @Bean
     public NewTopic topicOut() {

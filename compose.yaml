@@ -126,6 +126,7 @@ services:
     environment:
       SPRING_APPLICATION_NAME: app1
       LOGGING_FILE_NAME: /var/log/app_logs/app1.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
       JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/elastic-apm-agent.jar -Delastic.apm.service_name=app1 -Delastic.apm.application_packages=pt.obs -Delastic.apm.server_url=http://apm-server:8200
 
   app2:
@@ -141,6 +142,7 @@ services:
     environment:
       SPRING_APPLICATION_NAME: app2
       LOGGING_FILE_NAME: /var/log/app_logs/app2.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
       JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/elastic-apm-agent.jar -Delastic.apm.service_name=app2 -Delastic.apm.application_packages=pt.obs -Delastic.apm.server_url=http://apm-server:8200
 
   app3:

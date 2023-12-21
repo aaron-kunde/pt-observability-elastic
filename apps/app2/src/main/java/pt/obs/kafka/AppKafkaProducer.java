@@ -11,7 +11,7 @@ import static pt.obs.kafka.KafkaConfiguration.TOPIC_OUT;
 @Component
 public class AppKafkaProducer {
 
-    private Counter topicCounter = Metrics.counter("app1.topic.out.counter", "it-1", "it-2");
+    private Counter api1Counter = Metrics.counter("app2.topic.out.counter", "it-1", "it-2");
 
     private final KafkaTemplate<String, String> kafkaTemplate;
 
@@ -22,6 +22,5 @@ public class AppKafkaProducer {
     public void send(String apiName, double data) {
         log.info(STR."Send data to topic \{TOPIC_OUT}: \{data}");
         kafkaTemplate.send(TOPIC_OUT, STR."app1;\{apiName};data:\{data}");
-        topicCounter.increment();
     }
 }
