@@ -22,7 +22,7 @@ class AppRestController {
     @GetMapping("/api-2")
     void api2() {
         log.info("Calling API 2");
-        api2Counter.count();
+        api2Counter.increment();
 
         throw new RuntimeException("An unexpected error occurred");
     }
