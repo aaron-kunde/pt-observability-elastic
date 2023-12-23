@@ -5,6 +5,8 @@ import io.micrometer.core.instrument.Metrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pt.obs.db.DataEntity;
+import pt.obs.db.DataRepository;
 import pt.obs.kafka.AppKafkaProducer;
 
 @Slf4j
@@ -14,9 +16,12 @@ class AppRestController {
     private Counter api1Counter = Metrics.counter("app1.api.1.counter", "it-1", "it-2");
     private Counter api2Counter = Metrics.counter("app1.api.2.counter", "it-1", "it-3");
     private final AppKafkaProducer kafkaProducer;
+    private final DataRepository dataRepository;
 
-    public AppRestController(AppKafkaProducer kafkaProducer) {
+    public AppRestController(AppKafkaProducer kafkaProducer,
+                             DataRepository dataRepository) {
         this.kafkaProducer = kafkaProducer;
+        this.dataRepository = dataRepository;
     }
 
     @GetMapping("/api-1")
@@ -24,7 +29,11 @@ class AppRestController {
         String apiName = "API 1";
         log.info(STR."Calling \{apiName}");
         api1Counter.increment();
-        kafkaProducer.send(apiName, api1Counter.count());
+        double count = api1Counter.count();
+        kafkaProducer.send(apiName, count);
+        DataEntity data = new DataEntity();
+        data.setData(STR."d: \{count}");
+        dataRepository.save(data);
     }
 
     @GetMapping("/api-2")
