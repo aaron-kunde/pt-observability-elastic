@@ -113,6 +113,25 @@ services:
     environment:
       AKHQ_CONFIGURATION: "akhq.connections.local.properties.bootstrap.servers: kafka:9094"
 
+  # Not reachable under localhost, but the IP of the WSL. e.g.  172.30.248.120 (ifconfig)
+  postgres:
+    image: docker.io/library/postgres:16.1
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - ./postgres-init.d:/docker-entrypoint-initdb.d
+
+  mysql:
+    image: docker.io/mysql:8.2.0
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./mysql-init.d:/docker-entrypoint-initdb.d
+
   app1:
     image: app1:latest
     ports:
