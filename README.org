@@ -92,6 +92,12 @@ Based on [[https://github.com/bitnami/containers/blob/main/bitnami/kafka/3.5/deb
 [[https://akhq.io/][AKHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
 [[http://localhost:9080]]
 
+** MySQL
+[[https://www.mysql.com][MySQL]] is used as an example database for persistence.
+
+** PostgreSQL
+[[https://www.postgresql.org][PostgreSQL]] is used as another example database for persistence.
+
 ** Example Applications
 The following applications describe different setups and scenarios:
 |      | Implementation  | Logging | Logging-Format | Metrics                           | Observability       |
@@ -99,6 +105,7 @@ The following applications describe different setups and scenarios:
 | App1 | Java Spring Boot | Logback | raw            | Spring Actuator JSON              | APM Agent           |
 | App2 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON + Prometheus | APM Agent           |
 | App3 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON              | OpenTelemetry Agent |
+Each application is deployed as a variant either connected to a MySQL or PostgreSQL database.
 
 *** App1
 A simple Spring-Boot application:
