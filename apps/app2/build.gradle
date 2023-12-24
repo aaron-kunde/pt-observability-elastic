@@ -24,15 +24,17 @@ repositories {
 }
 
 dependencies {
-    // This dependency is used by the application.
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'co.elastic.logging:logback-ecs-encoder:1.5.0'
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'com.h2database:h2'
 }
 
 testing {
