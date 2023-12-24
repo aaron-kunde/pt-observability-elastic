@@ -51,7 +51,7 @@ services:
       -E filebeat.inputs.0.id=plain_logs
       -E filebeat.inputs.0.type=filestream
       -E filebeat.inputs.0.enabled=true
-      -E filebeat.inputs.0.paths=/var/log/app_logs/app1.log
+      -E filebeat.inputs.0.paths=/var/log/app_logs/app1*.log
       -E filebeat.inputs.1.id=json_logs
       -E filebeat.inputs.1.type=filestream
       -E filebeat.inputs.1.paths=/var/log/app_logs/app*.log.json
@@ -132,10 +132,10 @@ services:
     volumes:
       - ./mysql-init.d:/docker-entrypoint-initdb.d
 
-  app1:
+  app1m:
     image: app1:latest
     ports:
-      - 8081:8081
+      - 8181:8081
     build:
       context: ./apps/app1
       args:
@@ -143,15 +143,50 @@ services:
     volumes:
       - app_logs:/var/log/app_logs
     environment:
-      SPRING_APPLICATION_NAME: app1
-      LOGGING_FILE_NAME: /var/log/app_logs/app1.log
+      SPRING_APPLICATION_NAME: app1m
+      LOGGING_FILE_NAME: /var/log/app_logs/app1m.log
       SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
-      JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/elastic-apm-agent.jar -Delastic.apm.service_name=app1 -Delastic.apm.application_packages=pt.obs -Delastic.apm.server_url=http://apm-server:8200
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/elastic-apm-agent.jar
+        -Delastic.apm.service_name=app1m
+        -Delastic.apm.application_packages=pt.obs
+        -Delastic.apm.server_url=http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/app1
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
 
-  app2:
+  app1p:
+    image: app1:latest
+    ports:
+      - 8281:8081
+    build:
+      context: ./apps/app1
+      args:
+        APP_NAME: app1
+    volumes:
+      - app_logs:/var/log/app_logs
+    environment:
+      SPRING_APPLICATION_NAME: app1p
+      LOGGING_FILE_NAME: /var/log/app_logs/app1p.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/elastic-apm-agent.jar
+        -Delastic.apm.service_name=app1p
+        -Delastic.apm.application_packages=pt.obs
+        -Delastic.apm.server_url=http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app1
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+
+  app2m:
     image: app2:latest
     ports:
-      - 8082:8082
+      - 8182:8082
     build:
       context: ./apps/app2
       args:
@@ -159,15 +194,50 @@ services:
     volumes:
       - app_logs:/var/log/app_logs
     environment:
-      SPRING_APPLICATION_NAME: app2
-      LOGGING_FILE_NAME: /var/log/app_logs/app2.log
+      SPRING_APPLICATION_NAME: app2m
+      LOGGING_FILE_NAME: /var/log/app_logs/app2m.log
       SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
-      JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/elastic-apm-agent.jar -Delastic.apm.service_name=app2 -Delastic.apm.application_packages=pt.obs -Delastic.apm.server_url=http://apm-server:8200
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/elastic-apm-agent.jar
+        -Delastic.apm.service_name=app2m
+        -Delastic.apm.application_packages=pt.obs
+        -Delastic.apm.server_url=http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/app2
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
 
-  app3:
+  app2p:
+    image: app2:latest
+    ports:
+      - 8282:8082
+    build:
+      context: ./apps/app2
+      args:
+        APP_NAME: app2
+    volumes:
+      - app_logs:/var/log/app_logs
+    environment:
+      SPRING_APPLICATION_NAME: app2p
+      LOGGING_FILE_NAME: /var/log/app_logs/app2p.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/elastic-apm-agent.jar
+        -Delastic.apm.service_name=app2p
+        -Delastic.apm.application_packages=pt.obs
+        -Delastic.apm.server_url=http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app2
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+
+  app3m:
     image: app3:latest
     ports:
-      - 8083:8083
+      - 8183:8083
     build:
       context: ./apps/app3
       args:
@@ -175,12 +245,39 @@ services:
     volumes:
       - app_logs:/var/log/app_logs
     environment:
-      SPRING_APPLICATION_NAME: app3
-      LOGGING_FILE_NAME: /var/log/app_logs/app3.log
+      SPRING_APPLICATION_NAME: app3m
+      LOGGING_FILE_NAME: /var/log/app_logs/app3m.log
       SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
       JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/opentelemetry-javaagent.jar
-      OTEL_SERVICE_NAME: app3
+      OTEL_SERVICE_NAME: app3m
       OTEL_EXPORTER_OTLP_ENDPOINT: http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/app3
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
+
+  app3p:
+    image: app3:latest
+    ports:
+      - 8283:8083
+    build:
+      context: ./apps/app3
+      args:
+        APP_NAME: app3
+    volumes:
+      - app_logs:/var/log/app_logs
+    environment:
+      SPRING_APPLICATION_NAME: app3p
+      LOGGING_FILE_NAME: /var/log/app_logs/app3p.log
+      SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
+      JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/opentelemetry-javaagent.jar
+      OTEL_SERVICE_NAME: app3p
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://apm-server:8200
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app3
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
 
 volumes:
   app_logs:
