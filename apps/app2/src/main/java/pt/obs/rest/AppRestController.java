@@ -32,7 +32,7 @@ class AppRestController {
         double count = api1Counter.count();
         kafkaProducer.send(apiName, count);
         DataEntity data = new DataEntity();
-        data.setData(STR."d: \{count}");
+        data.setData(STR."AppRestController: \{count}");
         dataRepository.save(data);
     }
 
