@@ -27,7 +27,7 @@ public class AppKafkaConsumer {
         this.restOutUrl = restOutUrl;
     }
 
-    @KafkaListener(id="app2:1", topics = {"topic1", "topic3"})
+    @KafkaListener(id="app3:1", topics = {"topic1", "topic3"})
     void listen(ConsumerRecord<String, String> record){
         log.info(STR."Fetch data from topic \{record.topic()}: \{record.key()}=\{record.value()}");
         topicCounter.increment();

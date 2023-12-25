@@ -6,15 +6,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
-import static pt.obs.kafka.KafkaConfiguration.TOPIC_OUT;
 @Slf4j
 @Component
 public class AppKafkaProducer {
 
     private Counter topicCounter;
-
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Value("${kafka.topic-out.name}") String topicOutName;
+    @Value("${spring.application.name}") String applicationName;
 
     AppKafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
                      @Value("${metrics.counter.topic-out.name}") String topicCounterName) {
@@ -23,8 +23,8 @@ public class AppKafkaProducer {
     }
 
     public void send(String apiName, double data) {
-        log.info(STR."Send data to topic \{TOPIC_OUT}: \{data}");
-        kafkaTemplate.send(TOPIC_OUT, STR."app2;\{apiName};data:\{data}");
+        log.info(STR."Send data to topic \{topicOutName}: \{data}");
+        kafkaTemplate.send(topicOutName, STR."\{applicationName};\{apiName};data:\{data}");
         topicCounter.increment();
     }
 }

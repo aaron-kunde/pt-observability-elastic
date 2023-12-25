@@ -132,14 +132,14 @@ The following call writes a message to Kafka topic ~topic1~:
 **** Metrics
 Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
 #+begin_src sh
-   curl localhost:8081/actuator/metrics/app1.api.1.counter
+   curl localhost:8181/actuator/metrics/app1m.api-1.counter
 #+end_src
 
 The output will be something like:
 #+begin_example
-{"name":"app1.api.1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
+{"name":"app1m.api-1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
 #+end_example
-Since these metrics are not presented all at once, they can't be analysed in Kibana out of the box.
+Since these metrics are not presented all at once, they can't be collected with Metricbeat and analysed in Kibana out of the box, using the ~metricbeat-*~ stream. They are accessible by APM.
 
 **** Traces
 Setting the the [[https://www.w3.org/TR/trace-context/][W3C Trace Context]]:
@@ -164,10 +164,10 @@ In Kibana ~trace.id~ and ~trace.parent~ can be verified under [[http://localhost
   ...
 #+end_example
 
-Traces and spans are even possible with Kafka topcis on the consumer site.
+Traces and spans are even possible with Kafka topcis on the consumer site, because these header are also set in Kafka headers: ~traceparent~, ~elasticapmtraceparent~ and ~tracestate~.
 
 **** Logs
-Logs are not seen under APM
+Logs have no ~trace.id~ and are not seen and correllated under APM. But not in all logs. This depends on the library, which is logging.
 
 *** App2
 Like App1, but
@@ -195,21 +195,23 @@ Calling this API will increase the metric ~prometheus.metrics.logback_events_tot
 **** Metrics
 Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
 #+begin_src sh
-  curl -s localhost:8082/actuator/prometheus | grep -e api_1
+  curl -s localhost:8182/actuator/prometheus | grep -e api_1
 #+end_src
 
 The output will be something like
 #+begin_example
 # HELP api_1_counter_total
 # TYPE api_1_counter_total counter
-api_1_counter_total{it_1="it-2",} 0.0
+app2m_api_1_counter_total{it_1="it-2",} 0.0
 #+end_example
+Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
+
 
 **** Traces
 Traces are handled like in App1.
 
 **** Logs
-Logs are structured and can be seen under APM.
+Logs are structured and can be seen under APM. They have a ~trace.id~ and can be correllated under APM.
 
 *** App3
 Like App2, but
@@ -233,10 +235,10 @@ The following call writes a message to Kafka topic ~topic3~:
 To analyse otel behaviour, start the application with ~Ddebug~.
 
 **** Metrics
-Metrics are partially handled like in App1, but custom metrics are not transferred to Elasticsearch and therefore not visible in Kibana.
+Metrics are partially handled like in App1, but not transferred to Elasticsearch and even not visible in APM.
 
 **** Traces
-Traces have less information as in App1 or App2 (e.g. only ~http.request.method~ and ~http.response.status_code~, but contain also ~parent.id~ and ~trace.id~.
+Traces have less information as in App1 or App2 (e.g. only ~http.request.method~ and ~http.response.status_code~, but contain also ~parent.id~ and ~trace.id~. Only ~traceparent~ header is set in Kafka headers.
 
 **** Logs
-Logs are structured and can be seen under APM, like in App2.
+Logs are structured and can be seen under APM, like in App2. They have no ~trace.id~ but a ~trac_id~ and cannot be correllated under APM through /Discover/. But not in all logs. This depends on the library, which is logging.
