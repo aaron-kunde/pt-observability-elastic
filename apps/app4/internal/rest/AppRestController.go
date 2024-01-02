@@ -2,8 +2,8 @@ package rest
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net/http"
+	log "pt.observability.elastic/app4/internal/logging"
 )
 
 func RegisterApiHandler() {

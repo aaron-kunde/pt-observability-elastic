@@ -171,7 +171,7 @@ Logs have no ~trace.id~ and are not seen and correllated under APM. But not in a
 
 *** App2
 Like App1, but
-- Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, by using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
+- Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, using [[https://www.elastic.co/guide/en/ecs-logging/java/1.x/setup.html][ECS Java logging]]
 - Logs are written in the default format to stdout like in App1
 - Logs are written in JSON format to a file, if application runs in a container. This saves filebeat resources, since it must not transform the logs into JSON and offers better filtering options in Elasticsearch and Kibana.
 - Publish metrics using also [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.prometheus][Prometheus-Exporter]]. These metrics can be analysed in Kibana.
@@ -242,3 +242,8 @@ Traces have less information as in App1 or App2 (e.g. only ~http.request.method~
 
 **** Logs
 Logs are structured and can be seen under APM, like in App2. They have no ~trace.id~ but a ~trac_id~ and cannot be correllated under APM through /Discover/. But not in all logs. This depends on the library, which is logging.
+
+*** App4
+A simple Go application:
+- Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, using [[https://www.elastic.co/guide/en/ecs-logging/go-logrus/current/setup.html][ECS Logging with logrus]]
+- Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format
