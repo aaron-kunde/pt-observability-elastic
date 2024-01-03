@@ -26,12 +26,20 @@ func configureFileLogger() {
 	} else {
 		standardLogger.Info(fmt.Sprintf("Failed to log to file '%s', using default stderr", loggingFileName))
 	}
-
-	// TODO: Only for errors
-	//logger.SetReportCaller(true)
 }
 
 func Info(args ...interface{}) {
 	standardLogger.Info(args...)
 	fileLogger.Info(args...)
+}
+
+func Error(args ...interface{}) {
+	// Alternative: Distinct error loggers
+	standardLogger.SetReportCaller(true)
+	standardLogger.Error(args...)
+	standardLogger.SetReportCaller(false)
+
+	fileLogger.SetReportCaller(true)
+	fileLogger.Error(args...)
+	fileLogger.SetReportCaller(false)
 }
