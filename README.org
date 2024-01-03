@@ -105,7 +105,7 @@ The following applications describe different setups and scenarios:
 | App1 | Java Spring Boot | Logback | raw            | Spring Actuator JSON              | APM Agent           |
 | App2 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON + Prometheus | APM Agent           |
 | App3 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON              | OpenTelemetry Agent |
-| App4 | Go               | Logrus  | ECS Logging    |                                   |                     |
+| App4 | Go               | Logrus  | ECS Logging    | Prometheus                        |                     |
 Each application is deployed as a variant either connected to a MySQL or PostgreSQL database.
 
 *** App1
@@ -248,14 +248,15 @@ A simple Go application:
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, using [[https://www.elastic.co/guide/en/ecs-logging/go-logrus/current/setup.html][ECS Logging with logrus]]
 - Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format.
 - Many fields are not set like in Java-Applications. Therefore at least the fields ~service.name~ and ~event.dataset~ are added. Further fields from [[https://www.elastic.co/guide/en/ecs-logging/java/current/setup.html][Java-Setup]] might be added
+- Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]]
 
 **** Logs
 Logs are structured, like in App2. They have no ~trace.id~.
 
 **** Metrics
-Metrics are also available at the Prometheus endpoint, e.g. for a Go standard metric:
+Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
 #+begin_src sh
-  curl -s localhost:8184/actuator/prometheus | grep -e go_
+  curl -s localhost:8184/actuator/prometheus | grep -e api_1
 #+end_src
 
 The output will be something like
