@@ -207,7 +207,6 @@ app2m_api_1_counter_total{it_1="it-2",} 0.0
 #+end_example
 Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
 
-
 **** Traces
 Traces are handled like in App1.
 
@@ -252,3 +251,17 @@ A simple Go application:
 
 **** Logs
 Logs are structured, like in App2. They have no ~trace.id~.
+
+**** Metrics
+Metrics are also available at the Prometheus endpoint, e.g. for a Go standard metric:
+#+begin_src sh
+  curl -s localhost:8184/actuator/prometheus | grep -e go_
+#+end_src
+
+The output will be something like
+#+begin_example
+# HELP go_threads Number of OS threads created.
+# TYPE go_threads gauge
+go_threads 8
+#+end_example
+Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream.

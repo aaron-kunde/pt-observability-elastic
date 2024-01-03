@@ -75,7 +75,7 @@ services:
       -E metricbeat.modules.0.tags='[t-app1, t-tag1, t-app3]'
       -E metricbeat.modules.0.fields='{project: "f-p1", app: ["f-app1", "f-app3"]}'
       -E metricbeat.modules.1.module=prometheus
-      -E metricbeat.modules.1.hosts='[app2m:8082, app2p:8082]'
+      -E metricbeat.modules.1.hosts='[app2m:8082, app2p:8082, app4:8084]'
       -E metricbeat.modules.1.metrics_path=/actuator/prometheus
       -E metricbeat.modules.1.metricsets=[collector]
       -E metricbeat.modules.1.tags='[t-app2, t-tag2]'
