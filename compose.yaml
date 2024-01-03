@@ -285,5 +285,18 @@ services:
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       REST_OUT_URL: http://app1p:8081/api-3
 
+  app4:
+    image: app4:latest
+    ports:
+      - 8184:8084
+    build:
+      context: ./apps/app4
+      args:
+        APP_NAME: app4
+    volumes:
+      - app_logs:/var/log/app_logs
+    environment:
+      LOGGING_FILE_NAME: /var/log/app_logs/app4.log.json
+
 volumes:
   app_logs:
