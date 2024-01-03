@@ -100,11 +100,12 @@ Based on [[https://github.com/bitnami/containers/blob/main/bitnami/kafka/3.5/deb
 
 ** Example Applications
 The following applications describe different setups and scenarios:
-|      | Implementation  | Logging | Logging-Format | Metrics                           | Observability       |
-|------+-----------------+---------+----------------+-----------------------------------+---------------------|
+|      | Implementation   | Logging | Logging-Format | Metrics                           | Observability       |
+|------+------------------+---------+----------------+-----------------------------------+---------------------|
 | App1 | Java Spring Boot | Logback | raw            | Spring Actuator JSON              | APM Agent           |
 | App2 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON + Prometheus | APM Agent           |
 | App3 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON              | OpenTelemetry Agent |
+| App4 | Go               | Logrus  | ECS Logging    |                                   |                     |
 Each application is deployed as a variant either connected to a MySQL or PostgreSQL database.
 
 *** App1
@@ -246,4 +247,8 @@ Logs are structured and can be seen under APM, like in App2. They have no ~trace
 *** App4
 A simple Go application:
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, using [[https://www.elastic.co/guide/en/ecs-logging/go-logrus/current/setup.html][ECS Logging with logrus]]
-- Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format
+- Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format.
+- Many fields are not set like in Java-Applications. Therefore at least the fields ~service.name~ and ~event.dataset~ are added. Further fields from [[https://www.elastic.co/guide/en/ecs-logging/java/current/setup.html][Java-Setup]] might be added
+
+**** Logs
+Logs are structured, like in App2. They have no ~trace.id~.

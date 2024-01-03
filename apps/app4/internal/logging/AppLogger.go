@@ -6,13 +6,30 @@ import (
 	"go.elastic.co/ecslogrus"
 	"os"
 )
+
 var standardLogger = logrus.New()
+var fileLoggerEntry *logrus.Entry
 var fileLogger = logrus.New()
 
 func init() {
 	configureFileLogger()
 }
+
 func configureFileLogger() {
+	addFields()
+	configureOutputFile()
+}
+
+func addFields() {
+	serviceName := os.Getenv("SERVICE_NAME")
+
+	if serviceName == "" {
+		serviceName = "goapp"
+	}
+	fileLoggerEntry = fileLogger.WithField("service.name", serviceName).WithField("event.dataset", serviceName)
+}
+
+func configureOutputFile() {
 	loggingFileName := os.Getenv("LOGGING_FILE_NAME")
 
 	if loggingFileName == "" {
@@ -30,7 +47,7 @@ func configureFileLogger() {
 
 func Info(args ...interface{}) {
 	standardLogger.Info(args...)
-	fileLogger.Info(args...)
+	fileLoggerEntry.Info(args...)
 }
 
 func Error(args ...interface{}) {
@@ -40,6 +57,6 @@ func Error(args ...interface{}) {
 	standardLogger.SetReportCaller(false)
 
 	fileLogger.SetReportCaller(true)
-	fileLogger.Error(args...)
+	fileLoggerEntry.Error(args...)
 	fileLogger.SetReportCaller(false)
 }

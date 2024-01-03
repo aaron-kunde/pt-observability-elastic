@@ -297,6 +297,7 @@ services:
       - app_logs:/var/log/app_logs
     environment:
       LOGGING_FILE_NAME: /var/log/app_logs/app4.log.json
+      SERVICE_NAME: app4
 
 volumes:
   app_logs:
