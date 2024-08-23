@@ -252,7 +252,9 @@ services:
       SPRING_APPLICATION_NAME: app3m
       LOGGING_FILE_NAME: /var/log/app_logs/app3m.log
       SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
-      JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/opentelemetry-javaagent.jar
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/opentelemetry-javaagent.jar
       OTEL_SERVICE_NAME: app3m
       OTEL_EXPORTER_OTLP_ENDPOINT: http://apm-server:8200
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/app3
@@ -276,7 +278,9 @@ services:
       SPRING_APPLICATION_NAME: app3p
       LOGGING_FILE_NAME: /var/log/app_logs/app3p.log
       SPRING_KAFKA_BOOTSTRAP-SERVERS: kafka:9094
-      JAVA_TOOL_OPTIONS: --enable-preview -javaagent:/opt/app/opentelemetry-javaagent.jar
+      JAVA_TOOL_OPTIONS: >
+        --enable-preview
+        -javaagent:/opt/app/opentelemetry-javaagent.jar
       OTEL_SERVICE_NAME: app3p
       OTEL_EXPORTER_OTLP_ENDPOINT: http://apm-server:8200
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app3
