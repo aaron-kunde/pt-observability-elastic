@@ -1,23 +1,35 @@
-* Description
-This setup uses the [[https://www.elastic.co/][Elastic Stack]] with some example applications, written in Java and Go to test the following aspects:
-- Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]] and [[https://www.elastic.co/de/observability][Elastic Observability]] 
-- Using Elastic Stack for logging and collecting metrics and telemetry data
-- Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]] on [[https://kafka.apache.org/][Apache Kafka]]
+:PROPERTIES:
+:header-args: :results silent
+:END:
+#+title: Prototype: Observability with Elastic
+#+author: Aaron Kunde
+This is a prototype for an example setup to accomplish [[https://en.wikipedia.org/wiki/Observability_(software)][observability]] with the [[https://www.elastic.co/][Elastic Stack]].
 
-* Build
-#+begin_src sh
-  gradle build -p apps
+There is no unique definition of observability, but it always relies on metrics, logs and traces.
+
+Therefore the example setup
+1. collects metrics using [[https://www.elastic.co/beats/metricbeat][Metricbeat]] and [[https://www.elastic.co/de/observability/application-performance-monitoring][APM]],
+2. collects Logs using [[https://www.elastic.co/de/beats/filebeat][Filebeat]] and
+3. collects Traces with APM.
+
+For testing, some example Java and Go applications are used:
+- Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]] and [[https://www.elastic.co/de/observability][Elastic Observability]].
+- Testing tracing with REST-Calls and asynchronous [[https://cloudevents.io/][CloudEvents]] on [[https://kafka.apache.org/][Apache Kafka]].
+
+* Build applications
+#+begin_src shell
+  gradle build -p apps && \
   podman-compose build
 #+end_src
 
 * Start
 1. To run the example, type:
-#+begin_src sh
+#+begin_src shell
   podman-compose up -d
 #+end_src
 
 2. Verify, indices exists, running:
-#+begin_src sh
+#+begin_src shell
   podman-compose exec elasticsearch curl -uelastic:elastic localhost:9200/_cat/indices
 #+end_src
 
@@ -45,7 +57,9 @@ Should return something like:
   green  open .internal.alerts-stack.alerts-default-000001                     lXiMpOJgTfKy5gUQGK9mlg 1 0    0 0    249b    249b    249b
 #+end_example
 
-Logs and metrics should be visible in Kibana: http://localhost:5601/app/observability/overview
+Logs and metrics should be visible in Kibana: [[http://localhost:5601/app/observability/overview][Kibana]] after authentication with:
+- Username: /elastic/
+- Passord: /elastic/
 
 * Setup
 ** Elasticsearch
@@ -89,8 +103,7 @@ Based on [[https://github.com/bitnami/containers/blob/main/bitnami/kafka/3.5/deb
   - and internal accessible using ~kafka:9094~
 
 ** AKHQ
-[[https://akhq.io/][AKHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. 
-[[http://localhost:9080]]
+[[https://akhq.io/][AKHQ]] is used to have an UI for inspecting and creating messages in Kafka. The configuration is based on [[https://akhq.io/docs/configuration/docker.html][official Documentation]], but without using an external file. The UI can be accessed by [[http://localhost:9080]].
 
 ** MySQL
 [[https://www.mysql.com][MySQL]] is used as an example database for persistence.
@@ -121,54 +134,78 @@ A simple Spring-Boot application:
 **** APIs
 ***** Success
 The following call writes a message to Kafka topic ~topic1~:
-#+begin_src sh
-  curl localhost:8081/api-1
+#+begin_src shell
+  curl localhost:8181/api-1
 #+end_src
 
 ***** Throwing unexpected errors / Stacktrace
-#+begin_example sh
-  curl localhost:8081/api-2
-#+end_example
+#+begin_src shell
+  curl localhost:8181/api-2
+#+end_src
 
 **** Metrics
 Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
-#+begin_src sh
+#+begin_src shell :results replace raw :wrap src json
    curl localhost:8181/actuator/metrics/app1m.api-1.counter
 #+end_src
 
 The output will be something like:
-#+begin_example
-{"name":"app1m.api-1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"it-1","values":["it-2"]}]}
-#+end_example
-Since these metrics are not presented all at once, they can't be collected with Metricbeat and analysed in Kibana out of the box, using the ~metricbeat-*~ stream. They are accessible by APM.
+#+begin_src json
+{"name":"app1m.api-1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"type","values":["FACHLICH"]},{"tag":"it-1","values":["it-2"]}]}
+#+end_src
+
+Since these metrics cannot be requested by a single URL, they can't be collected with Metricbeat. They are accessible by APM.
 
 **** Traces
 Setting the the [[https://www.w3.org/TR/trace-context/][W3C Trace Context]]:
-#+begin_src sh
-  curl -H 'traceparent: 00-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01'  localhost:8081/api-1
+#+begin_src shell
+  curl -H 'traceparent: 00-01010000000000000000000000000001-0000000000000001-01' localhost:8181/api-1
 #+end_src
 
-In Kibana ~trace.id~ and ~trace.parent~ can be verified under [[http://localhost:5601/app/apm/services/app1/transactions/view?rangeFrom=now-15m&rangeTo=now&transactionName=AppRestController%23api1&transactionType=request&comparisonEnabled=true&offset=1d&score=0&timestamp=2023-12-22T13:21:01.231Z&transactionId=694c633dcd107af3&traceId=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa&detailTab=metadata][Observability -> APM -> Services -> app1 -> Transactions -> AppRestController#app1]]:
+In Kibana ~trace.id~ and ~trace.parent~ can be verified under /Observability/ -> /APM/ -> /Services/ -> /app1/ -> /Transactions/ -> /AppRestController#app1/:
 #+begin_example
   ...
   http
-  http.request.headers.Traceparent 00-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbb-01
+  http.request.headers.Traceparent 00-01010000000000000000000000000001-0000000000000001-01
   ...
   parent
-  parent.id bbbbbbbbbbbbbbbb
+  parent.id 0000000000000001
   ...
   span
   span.id 694c633dcd107af3
   ...
   trace
-  trace.id aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  trace.id 01010000000000000000000000000001
   ...
 #+end_example
-
-Traces and spans are even possible with Kafka topcis on the consumer site, because these header are also set in Kafka headers: ~traceparent~, ~elasticapmtraceparent~ and ~tracestate~.
+Traces and spans are even possible with Kafka topcis on the consumer site, because these W3C-headers are also set as Kafka headers
+- traceparent :: Like the W3C-Header. E.g. ~00-01010000000000000000000000000001-7226b7e159fb2a61-01~
+- elasticapmtraceparent :: Some specific header for Elastic. E.g. ~1103806595072~
+- tracestate :: An optional W3C-Header. Not always set. E.g. ~es=s:1~
 
 **** Logs
-Logs have no ~trace.id~ and are not seen and correllated under APM. But not in all logs. This depends on the library, which is logging.
+The following fields are set in the log messages:
+
+| Field              | Value                                                                                                                                            |
+|--------------------+--------------------------------------------------------------------------------------------------------------------------------------------------|
+| @timestamp         | 2024-08-22T09:37:24.541Z                                                                                                                         |
+| agent.ephemeral_id | af3dd5a0-c249-43df-850c-4c88505362ea                                                                                                             |
+| agent.hostname     | 6457fb11cb1a                                                                                                                                     |
+| agent.id           | 9df9aa1c-f4c7-45f9-920f-0a4bc1b2afd2                                                                                                             |
+| agent.name         | 6457fb11cb1a                                                                                                                                     |
+| agent.type         | filebeat                                                                                                                                         |
+| agent.version      | 8.11.1                                                                                                                                           |
+| ecs.version        | 8.0.0                                                                                                                                            |
+| host.name          | 6457fb11cb1a                                                                                                                                     |
+| input.type         | filestream                                                                                                                                       |
+| log.file.device_id | 2080                                                                                                                                             |
+| log.file.inode     | 6855811                                                                                                                                          |
+| log.file.path      | /var/log/app_logs/app1m.log                                                                                                                      |
+| log.offset         | 0                                                                                                                                                |
+| message            | 2024-08-22T09:37:20.896Z INFO 1 --- [app1m] [main] pt.obs.App : Starting App using Java 21.0.1 with PID 1 (/opt/app/app.jar started by app in /) |
+
+- Logs are only visible in log stream, but not in APM
+- Logs have no ~trace.id~ and are not seen and correllated with APM.
 
 *** App2
 Like App1, but
@@ -183,35 +220,79 @@ Like App1, but
 **** APIs
 ***** Success
 The following call writes a message to Kafka topic ~topic2~:
-#+begin_example sh
-  curl localhost:8082/api-1
-#+end_example
+#+begin_src shell
+  curl localhost:8182/api-1
+#+end_src
 
 ***** Throwing unexpected errors / Stacktrace
 #+begin_example sh
-  curl localhost:8082/api-2
+  curl localhost:8182/api-2
 #+end_example
 Calling this API will increase the metric ~prometheus.metrics.logback_events_total~
 
 **** Metrics
 Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
-#+begin_src sh
+#+begin_src shell :results replace verbatim :wrap example
   curl -s localhost:8182/actuator/prometheus | grep -e api_1
 #+end_src
 
-The output will be something like
+The output will be something like:
 #+begin_example
-# HELP api_1_counter_total
-# TYPE api_1_counter_total counter
-app2m_api_1_counter_total{it_1="it-2",} 0.0
+  # HELP app2_api_1_counter_total  
+  # TYPE app2_api_1_counter_total counter
+  app2_api_1_counter_total{it_1="it-2",type="FACHLICH",} 0.0
 #+end_example
-Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
+
+Since these metrics can be requested by a single URL, they can be collected with Metricbeat. The metrics can be analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
+The setting of ~management.endpoints.web.exposure.include~ determines, which metrics are shown, when calling the API:
+
+#+begin_src shell :results replace raw :wrap src json
+  curl -s localhost:8182/actuator/metrics
+#+end_src
+
+Difference between ~management.endpoints.web.exposure.include=info,health,metrics,prometheus~ and ~management.endpoints.web.exposure.include=*~:
+#+begin_example
+  http.server.requests
+  kafka.consumer.node.incoming.byte.rate
+  kafka.consumer.node.incoming.byte.total
+  kafka.consumer.node.outgoing.byte.rate
+  kafka.consumer.node.outgoing.byte.total
+  kafka.consumer.node.request.latency.avg
+  kafka.consumer.node.request.latency.max
+  kafka.consumer.node.request.rate
+  kafka.consumer.node.request.size.avg
+  kafka.consumer.node.request.size.max
+  kafka.consumer.node.request.total
+  kafka.consumer.node.response.rate
+  kafka.consumer.node.response.total
+#+end_example
 
 **** Traces
-Traces are handled like in App1.
+Traces are handled like in App1:
+#+begin_src shell
+  curl -H 'traceparent: 00-01020000000000000000000000000001-0000000000000001-01' localhost:8182/api-1
+#+end_src
 
-**** Logs
-Logs are structured and can be seen under APM. They have a ~trace.id~ and can be correllated under APM.
+In Kibana ~trace.id~ and ~trace.parent~ can be verified under /Observability/ -> /APM/ -> /Services/ -> /app2m/ -> /Transactions/ -> /AppRestController#app2m/
+
+****** Logs
+Logs are structured and can be seen under APM.
+In general this new 3 fields are added:
+
+| Field               | Value                                                               |
+|---------------------+---------------------------------------------------------------------|
+| process.thread.name | main                                                                |
+| service.name        | app2m                                                               |
+| service.version     | 0.0.1-SNAPSHOT                                                      |
+
+If a request sets a ~traceparent~-Header (e.g. by REST-calls or incoming Kafka-Messages). ~trace.id~ and ~transaction.id~ are added in the log message as well:
+
+| Field               | Value                                |
+|---------------------+--------------------------------------|
+| trace.id            | 01020000000000000000000000000001     |
+| transaction.id      | 0c2dd98069817f01                     |
+
+With the ~trace.id~ the log messages can be correllated and seen under APM.
 
 *** App3
 Like App2, but
@@ -224,24 +305,47 @@ Like App2, but
 **** APIs
 ***** Success
 The following call writes a message to Kafka topic ~topic3~:
-#+begin_example sh
-  curl localhost:8083/api-1
-#+end_example
+#+begin_src shell
+  curl localhost:8183/api-1
+#+end_src
 
 ***** Throwing unexpected errors / Stacktrace
 #+begin_example sh
-  curl localhost:8083/api-2
+  curl localhost:8183/api-2
 #+end_example
 To analyse otel behaviour, start the application with ~Ddebug~.
 
 **** Metrics
 Metrics are partially handled like in App1, but not transferred to Elasticsearch and even not visible in APM.
+Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
+#+begin_src shell :results replace raw :wrap src json
+   curl localhost:8183/actuator/metrics/app3m.api-1.counter
+#+end_src
+
+The output will be something like:
+#+begin_src json
+{"name":"app3m.api-1.counter","measurements":[],"availableTags":[{"tag":"type","values":["FACHLICH"]},{"tag":"it-1","values":["it-2"]}]}
+#+end_src
+
+Metrics are not collected as noted in:
+#+begin_example
+  [otel.javaagent 2024-08-23 14:31:43:825 +0000] [http-nio-8083-exec-2] WARN io.opentelemetry.javaagent.shaded.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry - OpenTelemetry metrics bridge does not support reading measurements
+#+end_example
 
 **** Traces
 Traces have less information as in App1 or App2 (e.g. only ~http.request.method~ and ~http.response.status_code~, but contain also ~parent.id~ and ~trace.id~. Only ~traceparent~ header is set in Kafka headers.
+#+begin_src shell
+  curl -H 'traceparent: 00-01030000000000000000000000000001-0000000000000001-01' localhost:8183/api-1
+#+end_src
 
 **** Logs
-Logs are structured and can be seen under APM, like in App2. They have no ~trace.id~ but a ~trac_id~ and cannot be correllated under APM through /Discover/. But not in all logs. This depends on the library, which is logging.
+Like in App2, logs are structured and can be seen under APM. They are visible and can be correllated in APM. They have no ~trace.id~ or ~span.id~ but a ~trace_id~ and a ~span_id~. Additional a ~trace_flags~ is set, which shows the flags set in the ~traceparent~ W3C header:
+
+| Field       |                            Value |
+|-------------+----------------------------------|
+| span_id     |                 4bb2f8def0778182 |
+| trace_flags |                               01 |
+| trace_id    | 01010000000000000000000000000004 |
 
 *** App4
 A simple Go application:
@@ -250,19 +354,56 @@ A simple Go application:
 - Many fields are not set like in Java-Applications. Therefore at least the fields ~service.name~ and ~event.dataset~ are added. Further fields from [[https://www.elastic.co/guide/en/ecs-logging/java/current/setup.html][Java-Setup]] might be added
 - Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]]
 
-**** Logs
-Logs are structured, like in App2. They have no ~trace.id~.
+**** APIs
+***** Success
+The following call writes a message to Kafka topic ~topic3~:
+#+begin_src shell
+  curl localhost:8184/api-1
+#+end_src
+
+***** Throwing unexpected errors / Stacktrace
+#+begin_src shell
+  curl localhost:8183/api-2
+#+end_src
 
 **** Metrics
 Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
-#+begin_src sh
+#+begin_src shell :results replace verbatim :wrap example
   curl -s localhost:8184/actuator/prometheus | grep -e api_1
 #+end_src
 
-The output will be something like
+The output will be something like:
 #+begin_example
-# HELP go_threads Number of OS threads created.
-# TYPE go_threads gauge
-go_threads 8
+# HELP app4_api_1_counter 
+# TYPE app4_api_1_counter counter
+app4_api_1_counter{it_1="it-2"} 1
 #+end_example
 Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream.
+
+**** TODO Traces
+#+begin_src shell
+  curl -H 'traceparent: 00-01040000000000000000000000000001-0000000000000001-01' localhost:8184/api-1
+#+end_src
+
+**** TODO Logs
+Logs are structured, like in App2. They have no ~trace.id~. They are not visible in APM, since no APM connection exists and no data is in the ~apm~ indices.
+| Field              | Value                                  |
+|--------------------+----------------------------------------|
+| @timestamp         | 2024-08-22T09:37:34.762Z               |
+| agent.ephemeral_id | af3dd5a0-c249-43df-850c-4c88505362ea   |
+| agent.hostname     | 6457fb11cb1a                           |
+| agent.id           | 9df9aa1c-f4c7-45f9-920f-0a4bc1b2afd2   |
+| agent.name         | 6457fb11cb1a                           |
+| agent.type         | filebeat                               |
+| agent.version      | 8.11.1                                 |
+| ecs.version        | 1.6.0                                  |
+| event.dataset      | app4                                   |
+| host.name          | 6457fb11cb1a                           |
+| input.type         | filestream                             |
+| log.file.device_id | 2080                                   |
+| log.file.inode     | 6869471                                |
+| log.file.path      | /var/log/app_logs/app4.log.json        |
+| log.level          | info                                   |
+| log.offset         | 0                                      |
+| message            | Starting app4. Listening on port: 8084 |
+| service.name       | app4
