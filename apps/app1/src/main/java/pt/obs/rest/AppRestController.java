@@ -14,9 +14,9 @@ import pt.obs.kafka.AppKafkaProducer;
 @RestController
 class AppRestController {
 
-    private Counter api1Counter;
-    private Counter api2Counter;
-    private Counter api3Counter;
+    private final Counter api1Counter;
+    private final Counter api2Counter;
+    private final Counter api3Counter;
     private final AppKafkaProducer kafkaProducer;
     private final DataRepository dataRepository;
 
@@ -27,9 +27,9 @@ class AppRestController {
                              @Value("${metrics.counter.api-3.name}") String api3CounterName) {
         this.kafkaProducer = kafkaProducer;
         this.dataRepository = dataRepository;
-        this.api1Counter = Metrics.counter(api1CounterName, "it-1", "it-2");
-        this.api2Counter = Metrics.counter(api2CounterName, "it-1", "it-2");
-        this.api3Counter = Metrics.counter(api3CounterName, "it-1", "it-2");
+        this.api1Counter = Metrics.counter(api1CounterName, "it-1", "it-2", "type", "FACHLICH");
+        this.api2Counter = Metrics.counter(api2CounterName, "type", "TECHNISCH");
+        this.api3Counter = Metrics.counter(api3CounterName, "it-1", "it-22", "type", "keks");
     }
 
     @GetMapping("/api-1")
