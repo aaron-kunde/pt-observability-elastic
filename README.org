@@ -385,25 +385,31 @@ Since these metrics are presented all at once, they can be collected with Metric
   curl -H 'traceparent: 00-01040000000000000000000000000001-0000000000000001-01' localhost:8184/api-1
 #+end_src
 
-**** TODO Logs
-Logs are structured, like in App2. They have no ~trace.id~. They are not visible in APM, since no APM connection exists and no data is in the ~apm~ indices.
+**** Logs
+Logs are structured, like in App2. They have no ~trace.id~. The only ECS specific fields, which are added automatically are ~@timestamp~, ~ecs.version~, ~log.level~ and ~message~:
+| Field              | Value                                |
+|--------------------+--------------------------------------|
+| @timestamp         | Aug 30, 2024 @ 11:02:39.675          |
+| agent.ephemeral_id | 30170dba-e433-49aa-8e3f-b56a15e7a05b |
+| agent.hostname     | b59e6e8d00a5                         |
+| agent.id           | 77ac6de7-a0d9-4644-aac4-9420b66a0137 |
+| agent.name         | b59e6e8d00a5                         |
+| agent.type         | filebeat                             |
+| agent.version      | 8.11.1                               |
+| ecs.version        | 1.6.0                                |
+| host.name          | b59e6e8d00a5                         |
+| input.type         | filestream                           |
+| log.file.device_id | 2080                                 |
+| log.file.inode     | 6740367                              |
+| log.file.path      | /var/log/app_logs/app4.log.json      |
+| log.level          | info                                 |
+| log.offset         | 467                                  |
+| message            | Calling API 1                        |
+
+Further fields, like ~service.name~ or ~event.dataset~ had to be added as custom fields:
 | Field              | Value                                  |
 |--------------------+----------------------------------------|
-| @timestamp         | 2024-08-22T09:37:34.762Z               |
-| agent.ephemeral_id | af3dd5a0-c249-43df-850c-4c88505362ea   |
-| agent.hostname     | 6457fb11cb1a                           |
-| agent.id           | 9df9aa1c-f4c7-45f9-920f-0a4bc1b2afd2   |
-| agent.name         | 6457fb11cb1a                           |
-| agent.type         | filebeat                               |
-| agent.version      | 8.11.1                                 |
-| ecs.version        | 1.6.0                                  |
 | event.dataset      | app4                                   |
-| host.name          | 6457fb11cb1a                           |
-| input.type         | filestream                             |
-| log.file.device_id | 2080                                   |
-| log.file.inode     | 6869471                                |
-| log.file.path      | /var/log/app_logs/app4.log.json        |
-| log.level          | info                                   |
-| log.offset         | 0                                      |
-| message            | Starting app4. Listening on port: 8084 |
 | service.name       | app4
+
+They are not visible in APM, since no APM connection exists and no data is in the ~apm~ indices.
