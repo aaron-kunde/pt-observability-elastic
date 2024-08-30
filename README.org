@@ -162,7 +162,7 @@ Setting the the [[https://www.w3.org/TR/trace-context/][W3C Trace Context]]:
   curl -H 'traceparent: 00-01010000000000000000000000000001-0000000000000001-01' localhost:8181/api-1
 #+end_src
 
-In Kibana ~trace.id~ and ~trace.parent~ can be verified under /Observability/ -> /APM/ -> /Services/ -> /app1/ -> /Transactions/ -> /AppRestController#app1/:
+In Kibana ~trace.id~ and ~trace.parent~ can be verified at /Observability/ -> /APM/ -> /Services/ -> /app1/ -> /Transactions/ -> /AppRestController#app1/:
 #+begin_example
   ...
   http
@@ -225,9 +225,10 @@ The following call writes a message to Kafka topic ~topic2~:
 #+end_src
 
 ***** Throwing unexpected errors / Stacktrace
-#+begin_example sh
+#+begin_src shell
   curl localhost:8182/api-2
-#+end_example
+#+end_src
+
 Calling this API will increase the metric ~prometheus.metrics.logback_events_total~
 
 **** Metrics
@@ -245,12 +246,11 @@ The output will be something like:
 
 Since these metrics can be requested by a single URL, they can be collected with Metricbeat. The metrics can be analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
 The setting of ~management.endpoints.web.exposure.include~ determines, which metrics are shown, when calling the API:
-
 #+begin_src shell :results replace raw :wrap src json
   curl -s localhost:8182/actuator/metrics
 #+end_src
 
-Difference between ~management.endpoints.web.exposure.include=info,health,metrics,prometheus~ and ~management.endpoints.web.exposure.include=*~:
+Difference between ~management.endpoints.web.exposure.include=info,health,metrics,prometheus~ and ~management.endpoints.web.exposure.include=*~ are, that the following metrics are only shown with the latter configuration:
 #+begin_example
   http.server.requests
   kafka.consumer.node.incoming.byte.rate
@@ -273,7 +273,7 @@ Traces are handled like in App1:
   curl -H 'traceparent: 00-01020000000000000000000000000001-0000000000000001-01' localhost:8182/api-1
 #+end_src
 
-In Kibana ~trace.id~ and ~trace.parent~ can be verified under /Observability/ -> /APM/ -> /Services/ -> /app2m/ -> /Transactions/ -> /AppRestController#app2m/
+In Kibana ~trace.id~ and ~trace.parent~ can be verified at /Observability/ -> /APM/ -> /Services/ -> /app2m/ -> /Transactions/ -> /AppRestController#app2m/
 
 ****** Logs
 Logs are structured and can be seen under APM.
@@ -318,18 +318,18 @@ To analyse otel behaviour, start the application with ~Ddebug~.
 **** Metrics
 Metrics are partially handled like in App1, but not transferred to Elasticsearch and even not visible in APM.
 Metrics are only available at the actuator endpoint, e.g. for the ~api1Counter~:
-#+begin_src shell :results replace raw :wrap src json
+#+begin_src shell :results replace raw :wrap example json
    curl localhost:8183/actuator/metrics/app3m.api-1.counter
 #+end_src
 
 The output will be something like:
-#+begin_src json
-{"name":"app3m.api-1.counter","measurements":[],"availableTags":[{"tag":"type","values":["FACHLICH"]},{"tag":"it-1","values":["it-2"]}]}
-#+end_src
+#+begin_example json
+{"name":"app3m.api-1.counter","measurements":[{"statistic":"COUNT","value":0.0}],"availableTags":[{"tag":"type","values":["FACHLICH"]},{"tag":"it-1","values":["it-2"]}]}
+#+end_example
 
-Metrics are not collected as noted in:
-#+begin_example
-  [otel.javaagent 2024-08-23 14:31:43:825 +0000] [http-nio-8083-exec-2] WARN io.opentelemetry.javaagent.shaded.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry - OpenTelemetry metrics bridge does not support reading measurements
+If no measurement is shown, like in the following example, the app has to be restarted:
+#+begin_example json
+{"name":"app3m.api-1.counter","measurements":[],"availableTags":[{"tag":"type","values":["FACHLICH"]},{"tag":"it-1","values":["it-2"]}]}
 #+end_example
 
 **** Traces
@@ -343,9 +343,9 @@ Like in App2, logs are structured and can be seen under APM. They are visible an
 
 | Field       |                            Value |
 |-------------+----------------------------------|
-| span_id     |                 4bb2f8def0778182 |
+| span_id     |                 76602a685fb53862 |
 | trace_flags |                               01 |
-| trace_id    | 01010000000000000000000000000004 |
+| trace_id    | 01030000000000000000000000000001 |
 
 *** App4
 A simple Go application:
