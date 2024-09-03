@@ -302,6 +302,9 @@ services:
     environment:
       LOGGING_FILE_NAME: /var/log/app_logs/app4.log.json
       SERVICE_NAME: app4
+      GORM_DATASOURCE_URL: tcp(mysql:3306)/app4?charset=utf8mb4&parseTime=True&loc=Local
+      GORM_DATASOURCE_USERNAME: root
+      GORM_DATASOURCE_PASSWORD: root
 
 volumes:
   app_logs:
