@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"os"
 	log "pt.observability.elastic/app4/internal/logging"
@@ -13,7 +14,15 @@ type DataRepository struct {
 }
 
 var repository = DataRepository{
-	db: initMySqlDBSession(),
+	db: initDBSession(),
+}
+
+func initDBSession() *gorm.DB {
+	if os.Getenv("GORM_DRIVER") == "postgres" {
+		return initPostgreSQLSession()
+	} else {
+		return initMySqlDBSession()
+	}
 }
 
 func initMySqlDBSession() *gorm.DB {
@@ -35,6 +44,41 @@ func initMySqlDBSession() *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@%s", username, password, url)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
+	if err != nil {
+		log.Error(err)
+	}
+	return db
+}
+
+func initPostgreSQLSession() *gorm.DB {
+	username := os.Getenv("GORM_DATASOURCE_USERNAME")
+
+	if username == "" {
+		username = "postgres"
+	}
+	password := os.Getenv("GORM_DATASOURCE_PASSWORD")
+
+	if password == "" {
+		password = "postgres"
+	}
+
+	host := os.Getenv("GORM_HOST")
+	if host == "" {
+		host = "localhost"
+	}
+	dbname := os.Getenv("GORM_DBNAME")
+	if dbname == "" {
+		dbname = "app4"
+	}
+	port := os.Getenv("GORM_PORT")
+	if port == "" {
+		port = "5432"
+	}
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+		host, username, password, dbname, port)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Error(err)
 	}
