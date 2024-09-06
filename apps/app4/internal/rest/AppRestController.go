@@ -7,6 +7,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net/http"
 	"pt.observability.elastic/app4/internal/db"
+	"pt.observability.elastic/app4/internal/kafka"
 	log "pt.observability.elastic/app4/internal/logging"
 )
 
@@ -33,10 +34,12 @@ var (
 
 func RegisterApiHandler() {
 	http.HandleFunc("/api-1", func(writer http.ResponseWriter, request *http.Request) {
-		log.Info("Calling API 1")
+		var apiName = "API 1"
+		log.Info(fmt.Sprintf("Calling %s", apiName))
 		api1Counter.Inc()
 		api1Cnt++
 
+		kafka.Send(apiName, api1Cnt)
 		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-1: %d", api1Cnt)}
 		db.Save(dataEntity)
 
