@@ -10,12 +10,12 @@ import (
 
 var port = 8084
 
-func main()  {
-	log.Info("Starting app4. Listening on port: ", port)
+func main() {
+	log.Info("Starting App using Go. Listening on port: ", port)
 
 	http.Handle("/actuator/prometheus", promhttp.Handler())
 
 	rest.RegisterApiHandler()
 
-	http.ListenAndServe(":" + strconv.Itoa(port), nil)
+	http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }

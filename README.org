@@ -8,9 +8,11 @@ This is a prototype for an example setup to accomplish [[https://en.wikipedia.or
 There is no unique definition of observability, but it always relies on metrics, logs and traces.
 
 Therefore the example setup
-1. collects metrics using [[https://www.elastic.co/beats/metricbeat][Metricbeat]] and [[https://www.elastic.co/de/observability/application-performance-monitoring][APM]],
-2. collects Logs using [[https://www.elastic.co/de/beats/filebeat][Filebeat]] and
-3. collects Traces with APM.
+1. writes logs using [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS logging]]
+2. collects metrics using [[https://www.elastic.co/beats/metricbeat][Metricbeat]] and [[https://www.elastic.co/de/observability/application-performance-monitoring][APM]],
+3. collects logs using [[https://www.elastic.co/de/beats/filebeat][Filebeat]],
+4. collects traces with APM on client and server side,
+5. collects metrics and traces with [[https://opentelemetry.io/][OpenTelemetry]] on client side.
 
 For testing, some example Java and Go applications are used:
 - Using different instrumentation methods from [[https://opentelemetry.io/][OpenTelemetry]] and [[https://www.elastic.co/de/observability][Elastic Observability]].
@@ -185,27 +187,327 @@ Traces and spans are even possible with Kafka topcis on the consumer site, becau
 
 **** Logs
 The following fields are set in the log messages:
+| Field              | Value                                                                                                                         |
+|--------------------+-------------------------------------------------------------------------------------------------------------------------------|
+| _id                | q6h865EBkJCAMLR0FlbY                                                                                                          |
+| _index             | .ds-filebeat-8.11.1-2024.09.13-000001                                                                                         |
+| _score             | -                                                                                                                             |
+| @timestamp         | Sep 13, 2024 @ 15:04:22.759                                                                                                   |
+| agent.ephemeral_id | 92dc00d5-4364-429a-9894-e33011187cb3                                                                                          |
+| agent.hostname     | 5b73a6bd3b99                                                                                                                  |
+| agent.id           | a0f97589-8208-4933-9389-c32bf0f7b2d1                                                                                          |
+| agent.name         | 5b73a6bd3b99                                                                                                                  |
+| agent.type         | filebeat                                                                                                                      |
+| agent.version      | 8.11.1                                                                                                                        |
+| ecs.version        | 8.0.0                                                                                                                         |
+| host.name          | 5b73a6bd3b99                                                                                                                  |
+| input.type         | filestream                                                                                                                    |
+| log.file.device_id | 2080                                                                                                                          |
+| log.file.inode     | 6727840                                                                                                                       |
+| log.file.path      | /var/log/app_logs/app1m.log                                                                                                   |
+| log.offset         | 63,351                                                                                                                        |
+| message            | 2024-09-13T13:04:16.916Z  INFO 1 --- [app1m] [http-nio-8081-exec-10] pt.obs.rest.AppRestController            : Calling API 1 |
 
-| Field              | Value                                                                                                                                            |
-|--------------------+--------------------------------------------------------------------------------------------------------------------------------------------------|
-| @timestamp         | 2024-08-22T09:37:24.541Z                                                                                                                         |
-| agent.ephemeral_id | af3dd5a0-c249-43df-850c-4c88505362ea                                                                                                             |
-| agent.hostname     | 6457fb11cb1a                                                                                                                                     |
-| agent.id           | 9df9aa1c-f4c7-45f9-920f-0a4bc1b2afd2                                                                                                             |
-| agent.name         | 6457fb11cb1a                                                                                                                                     |
-| agent.type         | filebeat                                                                                                                                         |
-| agent.version      | 8.11.1                                                                                                                                           |
-| ecs.version        | 8.0.0                                                                                                                                            |
-| host.name          | 6457fb11cb1a                                                                                                                                     |
-| input.type         | filestream                                                                                                                                       |
-| log.file.device_id | 2080                                                                                                                                             |
-| log.file.inode     | 6855811                                                                                                                                          |
-| log.file.path      | /var/log/app_logs/app1m.log                                                                                                                      |
-| log.offset         | 0                                                                                                                                                |
-| message            | 2024-08-22T09:37:20.896Z INFO 1 --- [app1m] [main] pt.obs.App : Starting App using Java 21.0.1 with PID 1 (/opt/app/app.jar started by app in /) |
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "q6h865EBkJCAMLR0FlbY",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:04:22.759Z",
+      "message": "2024-09-13T13:04:16.916Z  INFO 1 --- [app1m] [http-nio-8081-exec-10] pt.obs.rest.AppRestController            : Calling API 1",
+      "input": {
+	"type": "filestream"
+      },
+      "ecs": {
+	"version": "8.0.0"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "agent": {
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      },
+      "log": {
+	"offset": 63351,
+	"file": {
+	  "path": "/var/log/app_logs/app1m.log",
+	  "device_id": "2080",
+	  "inode": "6727840"
+	}
+      }
+    },
+    "fields": {
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	63351
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"2024-09-13T13:04:16.916Z  INFO 1 --- [app1m] [http-nio-8081-exec-10] pt.obs.rest.AppRestController            : Calling API 1"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:04:22.759Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"8.0.0"
+      ],
+      "log.file.inode": [
+	"6727840"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app1m.log"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ]
+    }
+  }
+#+end_src
 
 - Logs are only visible in log stream, but not in APM
-- Logs have no ~trace.id~ and are not seen and correllated with APM.
+- Logs have no trace id and are not seen and correllated with APM.
+
+***** Errors
+Generates multiple entries for one excpetion, because of linebreaks in stacktrace output:
+| Field              | Value                                                                                                                                                                                                                                                                                                          |
+|--------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| _id                | c6mg65EBkJCAMLR03E7p                                                                                                                                                                                                                                                                                           |
+| _index             | .ds-filebeat-8.11.1-2024.09.13-000001                                                                                                                                                                                                                                                                          |
+| _score             | -                                                                                                                                                                                                                                                                                                              |
+| @timestamp         | Sep 13, 2024 @ 15:44:32.761                                                                                                                                                                                                                                                                                    |
+| agent.ephemeral_id | 92dc00d5-4364-429a-9894-e33011187cb3                                                                                                                                                                                                                                                                           |
+| agent.hostname     | 5b73a6bd3b99                                                                                                                                                                                                                                                                                                   |
+| agent.id           | a0f97589-8208-4933-9389-c32bf0f7b2d1                                                                                                                                                                                                                                                                           |
+| agent.name         | 5b73a6bd3b99                                                                                                                                                                                                                                                                                                   |
+| agent.type         | filebeat                                                                                                                                                                                                                                                                                                       |
+| agent.version      | 8.11.1                                                                                                                                                                                                                                                                                                         |
+| ecs.version        | 8.0.0                                                                                                                                                                                                                                                                                                          |
+| host.name          | 5b73a6bd3b99                                                                                                                                                                                                                                                                                                   |
+| input.type         | filestream                                                                                                                                                                                                                                                                                                     |
+| log.file.device_id | 2080                                                                                                                                                                                                                                                                                                           |
+| log.file.inode     | 6727840                                                                                                                                                                                                                                                                                                        |
+| log.file.path      | /var/log/app_logs/app1m.log                                                                                                                                                                                                                                                                                    |
+| log.offset         | 68,684                                                                                                                                                                                                                                                                                                         |
+| message            | 2024-09-13T13:44:23.483Z ERROR 1 --- [app1m] [http-nio-8081-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause |
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "c6mg65EBkJCAMLR03E7p",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:44:32.761Z",
+      "log": {
+	"offset": 68684,
+	"file": {
+	  "path": "/var/log/app_logs/app1m.log",
+	  "device_id": "2080",
+	  "inode": "6727840"
+	}
+      },
+      "message": "2024-09-13T13:44:23.483Z ERROR 1 --- [app1m] [http-nio-8081-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause",
+      "input": {
+	"type": "filestream"
+      },
+      "agent": {
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1"
+      },
+      "ecs": {
+	"version": "8.0.0"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      }
+    },
+    "fields": {
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	68684
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"2024-09-13T13:44:23.483Z ERROR 1 --- [app1m] [http-nio-8081-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:44:32.761Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"8.0.0"
+      ],
+      "log.file.inode": [
+	"6727840"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app1m.log"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ]
+    }
+  }
+#+end_src
+
+| Field              | Value                                                    |
+|--------------------+----------------------------------------------------------|
+| _id                | dKmg65EBkJCAMLR03E7p                                     |
+| _index             | .ds-filebeat-8.11.1-2024.09.13-000001                    |
+| _score             | -                                                        |
+| @timestamp         | Sep 13, 2024 @ 15:44:32.761                              |
+| agent.ephemeral_id | 92dc00d5-4364-429a-9894-e33011187cb3                     |
+| agent.hostname     | 5b73a6bd3b99                                             |
+| agent.id           | a0f97589-8208-4933-9389-c32bf0f7b2d1                     |
+| agent.name         | 5b73a6bd3b99                                             |
+| agent.type         | filebeat                                                 |
+| agent.version      | 8.11.1                                                   |
+| ecs.version        | 8.0.0                                                    |
+| host.name          | 5b73a6bd3b99                                             |
+| input.type         | filestream                                               |
+| log.file.device_id | 2080                                                     |
+| log.file.inode     | 6727840                                                  |
+| log.file.path      | /var/log/app_logs/app1m.log                              |
+| log.offset         | 68,988                                                   |
+| message            | java.lang.RuntimeException: An unexpected error occurred |
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "dKmg65EBkJCAMLR03E7p",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:44:32.761Z",
+      "input": {
+	"type": "filestream"
+      },
+      "ecs": {
+	"version": "8.0.0"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "agent": {
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3"
+      },
+      "log": {
+	"offset": 68988,
+	"file": {
+	  "device_id": "2080",
+	  "inode": "6727840",
+	  "path": "/var/log/app_logs/app1m.log"
+	}
+      },
+      "message": "java.lang.RuntimeException: An unexpected error occurred"
+    },
+    "fields": {
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	68988
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"java.lang.RuntimeException: An unexpected error occurred"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:44:32.761Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"8.0.0"
+      ],
+      "log.file.inode": [
+	"6727840"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app1m.log"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ]
+    }
+  }
+#+end_src
+
+There are no differences to normal info messages.
 
 *** App2
 Like App1, but
@@ -294,6 +596,343 @@ If a request sets a ~traceparent~-Header (e.g. by REST-calls or incoming Kafka-M
 
 With the ~trace.id~ the log messages can be correllated and seen under APM.
 
+**** Logs
+The following fields are set in the log messages:
+
+| Field               | Value                                 |
+|---------------------+---------------------------------------|
+| _id                 | nKh865EBkJCAMLR0dFmY                  |
+| _index              | .ds-filebeat-8.11.1-2024.09.13-000001 |
+| _score              | -                                     |
+| @timestamp          | Sep 13, 2024 @ 15:04:39.903           |
+| agent.ephemeral_id  | 92dc00d5-4364-429a-9894-e33011187cb3  |
+| agent.hostname      | 5b73a6bd3b99                          |
+| agent.id            | a0f97589-8208-4933-9389-c32bf0f7b2d1  |
+| agent.name          | 5b73a6bd3b99                          |
+| agent.type          | filebeat                              |
+| agent.version       | 8.11.1                                |
+| ecs.version         | 1.2.0                                 |
+| event.dataset       | app2m                                 |
+| host.name           | 5b73a6bd3b99                          |
+| input.type          | filestream                            |
+| log.file.device_id  | 2080                                  |
+| log.file.inode      | 6724123                               |
+| log.file.path       | /var/log/app_logs/app2m.log.json      |
+| log.level           | INFO                                  |
+| log.logger          | pt.obs.rest.AppRestController         |
+| log.offset          | 60,571                                |
+| message             | Calling API 1                         |
+| process.thread.name | http-nio-8082-exec-1                  |
+| service.name        | app2m                                 |
+| service.version     | 0.0.1-SNAPSHOT                        |
+| trace.id            | c9cdd7e7b614e718bb628d53d2b6990c      |
+| transaction.id      | 1e3407e395660010
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "nKh865EBkJCAMLR0dFmY",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:04:39.903Z",
+      "transaction": {
+	"id": "1e3407e395660010"
+      },
+      "input": {
+	"type": "filestream"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "trace": {
+	"id": "c9cdd7e7b614e718bb628d53d2b6990c"
+      },
+      "process": {
+	"thread": {
+	  "name": "http-nio-8082-exec-1"
+	}
+      },
+      "log": {
+	"offset": 60571,
+	"file": {
+	  "inode": "6724123",
+	  "path": "/var/log/app_logs/app2m.log.json",
+	  "device_id": "2080"
+	},
+	"level": "INFO",
+	"logger": "pt.obs.rest.AppRestController"
+      },
+      "message": "Calling API 1",
+      "event": {
+	"dataset": "app2m"
+      },
+      "agent": {
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat"
+      },
+      "ecs": {
+	"version": "1.2.0"
+      },
+      "service": {
+	"name": "app2m",
+	"version": "0.0.1-SNAPSHOT"
+      }
+    },
+    "fields": {
+      "service.name": [
+	"app2m"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	60571
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"Calling API 1"
+      ],
+      "log.logger": [
+	"pt.obs.rest.AppRestController"
+      ],
+      "transaction.id": [
+	"1e3407e395660010"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "trace.id": [
+	"c9cdd7e7b614e718bb628d53d2b6990c"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:04:39.903Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "service.version": [
+	"0.0.1-SNAPSHOT"
+      ],
+      "ecs.version": [
+	"1.2.0"
+      ],
+      "log.file.inode": [
+	"6724123"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app2m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "log.level": [
+	"INFO"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "event.dataset": [
+	"app2m"
+      ],
+      "process.thread.name": [
+	"http-nio-8082-exec-1"
+      ]
+    }
+  }
+#+end_src
+
+- ~ecs.version~ is set to 1.2.0
+- New fields: ~event.dataset~, ~log.level~, ~log.logger~, ~process.thread.name~, ~service.name~, ~service.version~, ~trace.id~ and ~transaction.id~
+- ~message~ is stripped
+- Logs are only visible in log stream, but not in APM
+- Logs have ~trace.id~ and are seen and correllated with APM.
+
+***** Errors
+https://www.elastic.co/guide/en/ecs/8.11/ecs-error.html
+- ~error.message~ contains error message
+- ~error.stack_trace~ contains full stack trace without linebreaks. So only one message per error exists.
+- ~error.type~ contains exception
+- No trace id set
+
+| Field               | Value                                                                                                                                                                                           |
+|---------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| _id                 | iqmh65EBkJCAMLR0A0_y                                                                                                                                                                            |
+| _index              | .ds-filebeat-8.11.1-2024.09.13-000001                                                                                                                                                           |
+| _score              | -                                                                                                                                                                                               |
+| @timestamp          | Sep 13, 2024 @ 15:44:41.803                                                                                                                                                                     |
+| agent.ephemeral_id  | 92dc00d5-4364-429a-9894-e33011187cb3                                                                                                                                                            |
+| agent.hostname      | 5b73a6bd3b99                                                                                                                                                                                    |
+| agent.id            | a0f97589-8208-4933-9389-c32bf0f7b2d1                                                                                                                                                            |
+| agent.name          | 5b73a6bd3b99                                                                                                                                                                                    |
+| agent.type          | filebeat                                                                                                                                                                                        |
+| agent.version       | 8.11.1                                                                                                                                                                                          |
+| ecs.version         | 1.2.0                                                                                                                                                                                           |
+| error.message       | An unexpected error occurred                                                                                                                                                                    |
+| error.stack_trace   | java.lang.RuntimeException: An unexpected error occurred                                                                                                                                        |
+|                     | at ...                                                                                                                                                                                          |
+| error.type          | java.lang.RuntimeException                                                                                                                                                                      |
+| event.dataset       | app2m                                                                                                                                                                                           |
+| host.name           | 5b73a6bd3b99                                                                                                                                                                                    |
+| input.type          | filestream                                                                                                                                                                                      |
+| log.file.device_id  | 2080                                                                                                                                                                                            |
+| log.file.inode      | 6724123                                                                                                                                                                                         |
+| log.file.path       | /var/log/app_logs/app2m.log.json                                                                                                                                                                |
+| log.level           | ERROR                                                                                                                                                                                           |
+| log.logger          | org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]                                                                                                             |
+| log.offset          | 68,421                                                                                                                                                                                          |
+| message             | Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause |
+| process.thread.name | http-nio-8082-exec-5                                                                                                                                                                            |
+| service.name        | app2m                                                                                                                                                                                           |
+| service.version     | 0.0.1-SNAPSHOT
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "iqmh65EBkJCAMLR0A0_y",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:44:41.803Z",
+      "service": {
+	"name": "app2m",
+	"version": "0.0.1-SNAPSHOT"
+      },
+      "process": {
+	"thread": {
+	  "name": "http-nio-8082-exec-5"
+	}
+      },
+      "input": {
+	"type": "filestream"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "ecs": {
+	"version": "1.2.0"
+      },
+      "event": {
+	"dataset": "app2m"
+      },
+      "error": {
+	"stack_trace": "java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n",
+	"type": "java.lang.RuntimeException",
+	"message": "An unexpected error occurred"
+      },
+      "log": {
+	"offset": 68421,
+	"file": {
+	  "path": "/var/log/app_logs/app2m.log.json",
+	  "device_id": "2080",
+	  "inode": "6724123"
+	},
+	"logger": "org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]",
+	"level": "ERROR"
+      },
+      "agent": {
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1"
+      },
+      "message": "Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause"
+    },
+    "fields": {
+      "log.logger": [
+	"org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.level": [
+	"ERROR"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "process.thread.name": [
+	"http-nio-8082-exec-5"
+      ],
+      "service.name": [
+	"app2m"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	68421
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:44:41.803Z"
+      ],
+      "error.type": [
+	"java.lang.RuntimeException"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "service.version": [
+	"0.0.1-SNAPSHOT"
+      ],
+      "ecs.version": [
+	"1.2.0"
+      ],
+      "error.message": [
+	"An unexpected error occurred"
+      ],
+      "log.file.inode": [
+	"6724123"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app2m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "error.stack_trace": [
+	"java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n"
+      ],
+      "error.stack_trace.text": [
+	"java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n"
+      ],
+      "event.dataset": [
+	"app2m"
+      ]
+    }
+  }
+#+end_src
+
 *** App3
 Like App2, but
 - Publish metrics using [[https://opentelemetry.io/docs/instrumentation/java/automatic/][Automatic Instrumentation]] with an [[https://www.elastic.co/guide/en/apm/guide/current/open-telemetry-direct.html#instrument-apps-otel][OpenTelemetry Agent]] instead of an APM Java Agent or exporting the metrics with an [[https://docs.spring.io/spring-boot/docs/current/reference/html/actuator.html#actuator.metrics.export.otlp][OpenTelemetry-Exporter]]. 
@@ -310,9 +949,9 @@ The following call writes a message to Kafka topic ~topic3~:
 #+end_src
 
 ***** Throwing unexpected errors / Stacktrace
-#+begin_example sh
+#+begin_src shell
   curl localhost:8183/api-2
-#+end_example
+#+end_src
 To analyse otel behaviour, start the application with ~Ddebug~.
 
 **** Metrics
@@ -339,13 +978,338 @@ Traces have less information as in App1 or App2 (e.g. only ~http.request.method~
 #+end_src
 
 **** Logs
-Like in App2, logs are structured and can be seen under APM. They are visible and can be correllated in APM. They have no ~trace.id~ or ~span.id~ but a ~trace_id~ and a ~span_id~. Additional a ~trace_flags~ is set, which shows the flags set in the ~traceparent~ W3C header:
+Like in App2, logs are structured and can be seen under APM. They are visible and can be correllated in APM. They have no ~trace.id~ or ~span.id~ but a ~trace_id~ and a ~span_id~. Additional a ~trace_flags~ is set, which shows the flags set in the ~traceparent~ W3C header. They have no field No ~service.version~:
 
-| Field       |                            Value |
-|-------------+----------------------------------|
-| span_id     |                 76602a685fb53862 |
-| trace_flags |                               01 |
-| trace_id    | 01030000000000000000000000000001 |
+| Field               | Value                                 |
+|---------------------+---------------------------------------|
+| _id                 | vah865EBkJCAMLR0m1qr                  |
+| _index              | .ds-filebeat-8.11.1-2024.09.13-000001 |
+| _score              | -                                     |
+| @timestamp          | Sep 13, 2024 @ 15:04:51.633           |
+| agent.ephemeral_id  | 92dc00d5-4364-429a-9894-e33011187cb3  |
+| agent.hostname      | 5b73a6bd3b99                          |
+| agent.id            | a0f97589-8208-4933-9389-c32bf0f7b2d1  |
+| agent.name          | 5b73a6bd3b99                          |
+| agent.type          | filebeat                              |
+| agent.version       | 8.11.1                                |
+| ecs.version         | 1.2.0                                 |
+| event.dataset       | app3m                                 |
+| host.name           | 5b73a6bd3b99                          |
+| input.type          | filestream                            |
+| log.file.device_id  | 2080                                  |
+| log.file.inode      | 6740395                               |
+| log.file.path       | /var/log/app_logs/app3m.log.json      |
+| log.level           | INFO                                  |
+| log.logger          | pt.obs.rest.AppRestController         |
+| log.offset          | 23,887                                |
+| message             | Calling API 1                         |
+| process.thread.name | http-nio-8083-exec-4                  |
+| service.name        | app3m                                 |
+| span_id             | 9efe3447eb4d674a                      |
+| trace_flags         | 01                                    |
+| trace_id            | 5e7b333ff00469f84c22e3a009e07349      |
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "vah865EBkJCAMLR0m1qr",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:04:51.633Z",
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "agent": {
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      },
+      "trace_flags": "01",
+      "ecs": {
+	"version": "1.2.0"
+      },
+      "span_id": "9efe3447eb4d674a",
+      "trace_id": "5e7b333ff00469f84c22e3a009e07349",
+      "input": {
+	"type": "filestream"
+      },
+      "message": "Calling API 1",
+      "service": {
+	"name": "app3m"
+      },
+      "process": {
+	"thread": {
+	  "name": "http-nio-8083-exec-4"
+	}
+      },
+      "log": {
+	"logger": "pt.obs.rest.AppRestController",
+	"offset": 23887,
+	"file": {
+	  "path": "/var/log/app_logs/app3m.log.json",
+	  "device_id": "2080",
+	  "inode": "6740395"
+	},
+	"level": "INFO"
+      },
+      "event": {
+	"dataset": "app3m"
+      }
+    },
+    "fields": {
+      "trace_id": [
+	"5e7b333ff00469f84c22e3a009e07349"
+      ],
+      "service.name": [
+	"app3m"
+      ],
+      "span_id": [
+	"9efe3447eb4d674a"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	23887
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"Calling API 1"
+      ],
+      "log.logger": [
+	"pt.obs.rest.AppRestController"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:04:51.633Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "trace_flags": [
+	"01"
+      ],
+      "ecs.version": [
+	"1.2.0"
+      ],
+      "log.file.inode": [
+	"6740395"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app3m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "log.level": [
+	"INFO"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "event.dataset": [
+	"app3m"
+      ],
+      "process.thread.name": [
+	"http-nio-8083-exec-4"
+      ]
+    }
+  }
+#+end_src
+
+***** Errors
+Like in App2 ~error.message~, ~error.stack_trace~ and ~error.type~ are set. Additionally ~span_id~, ~trace_flags~ and ~trace_id~ are set:
+
+| Field               | Value                                                                                                                                                                                           |
+|---------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| _id                 | Damh65EBkJCAMLR0oFQ0                                                                                                                                                                            |
+| _index              | .ds-filebeat-8.11.1-2024.09.13-000001                                                                                                                                                           |
+| _score              | -                                                                                                                                                                                               |
+| @timestamp          | Sep 13, 2024 @ 15:45:14.567                                                                                                                                                                     |
+| agent.ephemeral_id  | 92dc00d5-4364-429a-9894-e33011187cb3                                                                                                                                                            |
+| agent.hostname      | 5b73a6bd3b99                                                                                                                                                                                    |
+| agent.id            | a0f97589-8208-4933-9389-c32bf0f7b2d1                                                                                                                                                            |
+| agent.name          | 5b73a6bd3b99                                                                                                                                                                                    |
+| agent.type          | filebeat                                                                                                                                                                                        |
+| agent.version       | 8.11.1                                                                                                                                                                                          |
+| ecs.version         | 1.2.0                                                                                                                                                                                           |
+| error.message       | An unexpected error occurred                                                                                                                                                                    |
+| error.stack_trace   | java.lang.RuntimeException: An unexpected error occurred                                                                                                                                        |
+|                     | at ...                                                                                                                                                                                          |
+| error.type          | java.lang.RuntimeException                                                                                                                                                                      |
+| event.dataset       | app3m                                                                                                                                                                                           |
+| host.name           | 5b73a6bd3b99                                                                                                                                                                                    |
+| input.type          | filestream                                                                                                                                                                                      |
+| log.file.device_id  | 2080                                                                                                                                                                                            |
+| log.file.inode      | 6740395                                                                                                                                                                                         |
+| log.file.path       | /var/log/app_logs/app3m.log.json                                                                                                                                                                |
+| log.level           | ERROR                                                                                                                                                                                           |
+| log.logger          | org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]                                                                                                             |
+| log.offset          | 39,622                                                                                                                                                                                          |
+| message             | Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause |
+| process.thread.name | http-nio-8083-exec-9                                                                                                                                                                            |
+| service.name        | app3m                                                                                                                                                                                           |
+| span_id             | 7340054ef8a6e760                                                                                                                                                                                |
+| trace_flags         | 01                                                                                                                                                                                              |
+| trace_id            | 6c3b1d3e99957ca5b7cc7657d5d942e9                                                                                                                                                                |
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "Damh65EBkJCAMLR0oFQ0",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:45:14.567Z",
+      "trace_flags": "01",
+      "ecs": {
+	"version": "1.2.0"
+      },
+      "log": {
+	"level": "ERROR",
+	"logger": "org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]",
+	"offset": 39622,
+	"file": {
+	  "path": "/var/log/app_logs/app3m.log.json",
+	  "device_id": "2080",
+	  "inode": "6740395"
+	}
+      },
+      "process": {
+	"thread": {
+	  "name": "http-nio-8083-exec-9"
+	}
+      },
+      "event": {
+	"dataset": "app3m"
+      },
+      "error": {
+	"stack_trace": "java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter.doFilter(OpenTelemetryHandlerMappingFilter.java:76)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n",
+	"message": "An unexpected error occurred",
+	"type": "java.lang.RuntimeException"
+      },
+      "input": {
+	"type": "filestream"
+      },
+      "agent": {
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3"
+      },
+      "trace_id": "6c3b1d3e99957ca5b7cc7657d5d942e9",
+      "service": {
+	"name": "app3m"
+      },
+      "message": "Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause",
+      "span_id": "7340054ef8a6e760",
+      "host": {
+	"name": "5b73a6bd3b99"
+      }
+    },
+    "fields": {
+      "log.logger": [
+	"org.apache.catalina.core.ContainerBase.[Tomcat].[localhost].[/].[dispatcherServlet]"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "trace_flags": [
+	"01"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.level": [
+	"ERROR"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "process.thread.name": [
+	"http-nio-8083-exec-9"
+      ],
+      "trace_id": [
+	"6c3b1d3e99957ca5b7cc7657d5d942e9"
+      ],
+      "service.name": [
+	"app3m"
+      ],
+      "span_id": [
+	"7340054ef8a6e760"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	39622
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: java.lang.RuntimeException: An unexpected error occurred] with root cause"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:45:14.567Z"
+      ],
+      "error.type": [
+	"java.lang.RuntimeException"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"1.2.0"
+      ],
+      "error.message": [
+	"An unexpected error occurred"
+      ],
+      "log.file.inode": [
+	"6740395"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app3m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "error.stack_trace": [
+	"java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter.doFilter(OpenTelemetryHandlerMappingFilter.java:76)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n"
+      ],
+      "error.stack_trace.text": [
+	"java.lang.RuntimeException: An unexpected error occurred\n\tat pt.obs.rest.AppRestController.api2(AppRestController.java:54)\n\tat java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)\n\tat java.base/java.lang.reflect.Method.invoke(Unknown Source)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:262)\n\tat org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:190)\n\tat org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:917)\n\tat org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:829)\n\tat org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)\n\tat org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)\n\tat org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)\n\tat org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)\n\tat org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)\n\tat org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)\n\tat jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:205)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter.doFilter(OpenTelemetryHandlerMappingFilter.java:76)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:109)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)\n\tat org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)\n\tat org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)\n\tat org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)\n\tat org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)\n\tat org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)\n\tat org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)\n\tat org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)\n\tat org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)\n\tat org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)\n\tat org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)\n\tat org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)\n\tat org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)\n\tat org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)\n\tat org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)\n\tat org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)\n\tat org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)\n\tat org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)\n\tat java.base/java.lang.Thread.run(Unknown Source)\n"
+      ],
+      "event.dataset": [
+	"app3m"
+      ]
+    }
+  }
+#+end_src
+                                                                                                                                                                                               |
 
 *** App4
 A simple Go application:
@@ -363,7 +1327,7 @@ The following call writes a message to Kafka topic ~topic3~:
 
 ***** Throwing unexpected errors / Stacktrace
 #+begin_src shell
-  curl localhost:8183/api-2
+  curl localhost:8184/api-2
 #+end_src
 
 **** Metrics
@@ -387,24 +1351,130 @@ Since these metrics are presented all at once, they can be collected with Metric
 
 **** Logs
 Logs are structured, like in App2. They have no ~trace.id~. The only ECS specific fields, which are added automatically are ~@timestamp~, ~ecs.version~, ~log.level~ and ~message~:
-| Field              | Value                                |
-|--------------------+--------------------------------------|
-| @timestamp         | Aug 30, 2024 @ 11:02:39.675          |
-| agent.ephemeral_id | 30170dba-e433-49aa-8e3f-b56a15e7a05b |
-| agent.hostname     | b59e6e8d00a5                         |
-| agent.id           | 77ac6de7-a0d9-4644-aac4-9420b66a0137 |
-| agent.name         | b59e6e8d00a5                         |
-| agent.type         | filebeat                             |
-| agent.version      | 8.11.1                               |
-| ecs.version        | 1.6.0                                |
-| host.name          | b59e6e8d00a5                         |
-| input.type         | filestream                           |
-| log.file.device_id | 2080                                 |
-| log.file.inode     | 6740367                              |
-| log.file.path      | /var/log/app_logs/app4.log.json      |
-| log.level          | info                                 |
-| log.offset         | 467                                  |
-| message            | Calling API 1                        |
+
+| Field              | Value                                 |
+|--------------------+---------------------------------------|
+| _id                | 7qh865EBkJCAMLR02lwj                  |
+| _index             | .ds-filebeat-8.11.1-2024.09.13-000001 |
+| _score             | -                                     |
+| @timestamp         | Sep 13, 2024 @ 15:05:08.821           |
+| agent.ephemeral_id | 92dc00d5-4364-429a-9894-e33011187cb3  |
+| agent.hostname     | 5b73a6bd3b99                          |
+| agent.id           | a0f97589-8208-4933-9389-c32bf0f7b2d1  |
+| agent.name         | 5b73a6bd3b99                          |
+| agent.type         | filebeat                              |
+| agent.version      | 8.11.1                                |
+| ecs.version        | 1.6.0                                 |
+| event.dataset      | app4m                                 |
+| host.name          | 5b73a6bd3b99                          |
+| input.type         | filestream                            |
+| log.file.device_id | 2080                                  |
+| log.file.inode     | 6740979                               |
+| log.file.path      | /var/log/app_logs/app4m.log.json      |
+| log.level          | info                                  |
+| log.offset         | 370                                   |
+| message            | Calling API 1                         |
+| service.name       | app4m                                 |
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "7qh865EBkJCAMLR02lwj",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:05:08.821Z",
+      "ecs": {
+	"version": "1.6.0"
+      },
+      "input": {
+	"type": "filestream"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "agent": {
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1",
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3"
+      },
+      "event": {
+	"dataset": "app4m"
+      },
+      "message": "Calling API 1",
+      "log": {
+	"offset": 370,
+	"file": {
+	  "device_id": "2080",
+	  "inode": "6740979",
+	  "path": "/var/log/app_logs/app4m.log.json"
+	},
+	"level": "info"
+      },
+      "service": {
+	"name": "app4m"
+      }
+    },
+    "fields": {
+      "service.name": [
+	"app4m"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	370
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"Calling API 1"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:05:08.821Z"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"1.6.0"
+      ],
+      "log.file.inode": [
+	"6740979"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app4m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "log.level": [
+	"info"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "event.dataset": [
+	"app4m"
+      ]
+    }
+  }
+#+end_src
 
 Further fields, like ~service.name~ or ~event.dataset~ had to be added as custom fields:
 | Field              | Value                                  |
@@ -413,3 +1483,149 @@ Further fields, like ~service.name~ or ~event.dataset~ had to be added as custom
 | service.name       | app4
 
 They are not visible in APM, since no APM connection exists and no data is in the ~apm~ indices.
+
+***** Errors
+Following additional fields ~log.origin.file.line~, ~log.origin.file.name~ and ~log.origin.function~ (see: https://www.elastic.co/guide/en/ecs/8.11/ecs-log.html) are set:
+
+| Field                | Value                                                                             |
+|----------------------+-----------------------------------------------------------------------------------|
+| _id                  | v6mh65EBkJCAMLR07lVT                                                              |
+| _index               | .ds-filebeat-8.11.1-2024.09.13-000001                                             |
+| _score               | -                                                                                 |
+| @timestamp           | Sep 13, 2024 @ 15:45:38.341                                                       |
+| agent.ephemeral_id   | 92dc00d5-4364-429a-9894-e33011187cb3                                              |
+| agent.hostname       | 5b73a6bd3b99                                                                      |
+| agent.id             | a0f97589-8208-4933-9389-c32bf0f7b2d1                                              |
+| agent.name           | 5b73a6bd3b99                                                                      |
+| agent.type           | filebeat                                                                          |
+| agent.version        | 8.11.1                                                                            |
+| ecs.version          | 1.6.0                                                                             |
+| event.dataset        | app4m                                                                             |
+| host.name            | 5b73a6bd3b99                                                                      |
+| input.type           | filestream                                                                        |
+| log.file.device_id   | 2080                                                                              |
+| log.file.inode       | 6740979                                                                           |
+| log.file.path        | /var/log/app_logs/app4m.log.json                                                  |
+| log.level            | error                                                                             |
+| log.offset           | 853                                                                               |
+| log.origin.file.line | 60                                                                                |
+| log.origin.file.name | /home/kunde/work/pt-observability-elastic/apps/app4/internal/logging/AppLogger.go |
+| log.origin.function  | pt.observability.elastic/app4/internal/logging.Error                              |
+| message              | An unexpected error occurred                                                      |
+| service.name         | app4m
+
+#+begin_src json
+  {
+    "_index": ".ds-filebeat-8.11.1-2024.09.13-000001",
+    "_id": "v6mh65EBkJCAMLR07lVT",
+    "_version": 1,
+    "_score": 0,
+    "_source": {
+      "@timestamp": "2024-09-13T13:45:38.341Z",
+      "service": {
+	"name": "app4m"
+      },
+      "input": {
+	"type": "filestream"
+      },
+      "host": {
+	"name": "5b73a6bd3b99"
+      },
+      "agent": {
+	"name": "5b73a6bd3b99",
+	"type": "filebeat",
+	"version": "8.11.1",
+	"ephemeral_id": "92dc00d5-4364-429a-9894-e33011187cb3",
+	"id": "a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      },
+      "log": {
+	"file": {
+	  "path": "/var/log/app_logs/app4m.log.json",
+	  "device_id": "2080",
+	  "inode": "6740979"
+	},
+	"origin": {
+	  "function": "pt.observability.elastic/app4/internal/logging.Error",
+	  "file": {
+	    "line": 60,
+	    "name": "/home/kunde/work/pt-observability-elastic/apps/app4/internal/logging/AppLogger.go"
+	  }
+	},
+	"level": "error",
+	"offset": 853
+      },
+      "event": {
+	"dataset": "app4m"
+      },
+      "message": "An unexpected error occurred",
+      "ecs": {
+	"version": "1.6.0"
+      }
+    },
+    "fields": {
+      "log.origin.file.line": [
+	60
+      ],
+      "service.name": [
+	"app4m"
+      ],
+      "input.type": [
+	"filestream"
+      ],
+      "log.offset": [
+	853
+      ],
+      "agent.hostname": [
+	"5b73a6bd3b99"
+      ],
+      "message": [
+	"An unexpected error occurred"
+      ],
+      "agent.type": [
+	"filebeat"
+      ],
+      "@timestamp": [
+	"2024-09-13T13:45:38.341Z"
+      ],
+      "log.origin.file.name": [
+	"/home/kunde/work/pt-observability-elastic/apps/app4/internal/logging/AppLogger.go"
+      ],
+      "log.origin.function": [
+	"pt.observability.elastic/app4/internal/logging.Error"
+      ],
+      "agent.id": [
+	"a0f97589-8208-4933-9389-c32bf0f7b2d1"
+      ],
+      "ecs.version": [
+	"1.6.0"
+      ],
+      "log.file.inode": [
+	"6740979"
+      ],
+      "log.file.device_id": [
+	"2080"
+      ],
+      "log.file.path": [
+	"/var/log/app_logs/app4m.log.json"
+      ],
+      "agent.ephemeral_id": [
+	"92dc00d5-4364-429a-9894-e33011187cb3"
+      ],
+      "log.level": [
+	"error"
+      ],
+      "agent.name": [
+	"5b73a6bd3b99"
+      ],
+      "agent.version": [
+	"8.11.1"
+      ],
+      "host.name": [
+	"5b73a6bd3b99"
+      ],
+      "event.dataset": [
+	"app4m"
+      ]
+    }
+  }
+#+end_src
