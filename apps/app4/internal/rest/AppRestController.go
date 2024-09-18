@@ -3,44 +3,29 @@ package rest
 import (
 	"errors"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"net/http"
 	"pt.observability.elastic/app4/internal/db"
 	"pt.observability.elastic/app4/internal/kafka"
 	log "pt.observability.elastic/app4/internal/logging"
+	"pt.observability.elastic/app4/internal/metrics"
 )
 
 var (
-	namespace   = "app4"
-	api1Counter = promauto.NewCounter(prometheus.CounterOpts{
-		Name:        "api_1_counter",
-		Namespace:   namespace,
-		ConstLabels: prometheus.Labels{"it_1": "it-2"},
-	})
-	api2Counter = promauto.NewCounter(prometheus.CounterOpts{
-		Name:        "api_2_counter",
-		Namespace:   namespace,
-		ConstLabels: prometheus.Labels{"it_1": "it-2"},
-	})
-	api3Counter = promauto.NewCounter(prometheus.CounterOpts{
-		Name:        "api_3_counter",
-		Namespace:   namespace,
-		ConstLabels: prometheus.Labels{"it_1": "it-2"},
-	})
-	api1Cnt uint64 = 0
-	api3Cnt uint64 = 0
+	api1Counter = metrics.NewCounter("api_1_counter", map[string]string{"it_1": "it-2"})
+	api2Counter = metrics.NewCounter("api_2_counter", map[string]string{"it_1": "it-2"})
+	api3Counter = metrics.NewCounter("api_3_counter", map[string]string{"it_1": "it-2"})
 )
 
 func RegisterApiHandler() {
 	http.HandleFunc("/api-1", func(writer http.ResponseWriter, request *http.Request) {
 		var apiName = "API 1"
 		log.Info(fmt.Sprintf("Calling %s", apiName))
-		api1Counter.Inc()
-		api1Cnt++
+		api1Counter.Increment()
 
-		kafka.Send(apiName, api1Cnt)
-		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-1: %d", api1Cnt)}
+		var count = api1Counter.Count()
+		kafka.Send(apiName, count)
+
+		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-1: %d", count)}
 		db.Save(dataEntity)
 
 		// Write response
@@ -49,7 +34,7 @@ func RegisterApiHandler() {
 
 	http.HandleFunc("/api-2", func(writer http.ResponseWriter, request *http.Request) {
 		log.Info("Calling API 2")
-		api2Counter.Inc()
+		api2Counter.Increment()
 
 		// Must be called, before writing a diffferent response
 		err := errors.New("An unexpected error occurred")
@@ -59,10 +44,9 @@ func RegisterApiHandler() {
 
 	http.HandleFunc("/api-3", func(writer http.ResponseWriter, request *http.Request) {
 		log.Info("Calling API 3")
-		api3Counter.Inc()
-		api3Cnt++
+		api3Counter.Increment()
 
-		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-3: %d", api1Cnt)}
+		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-3: %d", api3Counter.Count())}
 		db.Save(dataEntity)
 
 		// Write response

@@ -3,31 +3,37 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/segmentio/kafka-go"
 	"os"
 	log "pt.observability.elastic/app4/internal/logging"
+	"pt.observability.elastic/app4/internal/metrics"
 	"time"
 )
 
 type Producer struct {
 	conn         *kafka.Conn
-	topicCounter prometheus.Counter
+	topicCounter metrics.Counter
 }
 
 var (
 	topicOutName    = "topic4"
-	applicationName = os.Getenv("SERVICE_NAME")
+	applicationName = initApplicationName()
 	kafkaProducer   = Producer{
 		conn: initConnection(),
-		topicCounter: promauto.NewCounter(prometheus.CounterOpts{
-			Name:        fmt.Sprintf("%s_topic_out_counter", applicationName),
-			Namespace:   "app4",
-			ConstLabels: prometheus.Labels{"it_1": "it-2"},
-		}),
+		topicCounter: metrics.NewCounter(
+			"topic_out_counter",
+			map[string]string{"it_1": "it-2"}),
 	}
 )
+
+func initApplicationName() string {
+	var applicationName = os.Getenv("SERVICE_NAME")
+
+	if applicationName == "" {
+		applicationName = "app4"
+	}
+	return applicationName
+}
 
 func initConnection() *kafka.Conn {
 	partition := 0
@@ -59,5 +65,5 @@ func Send(apiName string, data uint64) {
 	if err != nil {
 		log.Error("Failed to write messages:", err)
 	}
-	kafkaProducer.topicCounter.Inc()
+	kafkaProducer.topicCounter.Increment()
 }

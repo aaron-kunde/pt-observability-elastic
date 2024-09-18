@@ -539,11 +539,11 @@ Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~ap
   curl -s localhost:8182/actuator/prometheus | grep -e api_1
 #+end_src
 
-The output will be something like:
+The result will be something like:
 #+begin_example
-  # HELP app2_api_1_counter_total  
-  # TYPE app2_api_1_counter_total counter
-  app2_api_1_counter_total{it_1="it-2",type="FACHLICH",} 0.0
+  # HELP app2m_api_1_counter_total  
+  # TYPE app2m_api_1_counter_total counter
+  app2m_api_1_counter_total{it_1="it-2",type="FACHLICH",} 0.0
 #+end_example
 
 Since these metrics can be requested by a single URL, they can be collected with Metricbeat. The metrics can be analysed in Kibana, using the ~metricbeat-*~ stream. They are also accessible by APM.
@@ -1333,15 +1333,25 @@ The following call writes a message to Kafka topic ~topic3~:
 **** Metrics
 Metrics are also available at the actuator Prometheus endpoint, e.g. for the ~api1Counter~:
 #+begin_src shell :results replace verbatim :wrap example
-  curl -s localhost:8184/actuator/prometheus | grep -e api_1
+  curl -s localhost:8184/actuator/prometheus | grep app4
 #+end_src
 
-The output will be something like:
+The result should be something like
 #+begin_example
-# HELP app4_api_1_counter 
-# TYPE app4_api_1_counter counter
-app4_api_1_counter{it_1="it-2"} 1
+  # HELP app4m_api_1_counter 
+  # TYPE app4m_api_1_counter counter
+  app4m_api_1_counter{it_1="it-2"} 0
+  # HELP app4m_api_2_counter 
+  # TYPE app4m_api_2_counter counter
+  app4m_api_2_counter{it_1="it-2"} 0
+  # HELP app4m_api_3_counter 
+  # TYPE app4m_api_3_counter counter
+  app4m_api_3_counter{it_1="it-2"} 0
+  # HELP app4m_topic_out_counter 
+  # TYPE app4m_topic_out_counter counter
+  app4m_topic_out_counter{it_1="it-2"} 0
 #+end_example
+
 Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream.
 
 **** TODO Traces
