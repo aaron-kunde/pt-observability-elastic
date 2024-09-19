@@ -1315,7 +1315,7 @@ A simple Go application:
 - Implements [[https://www.elastic.co/guide/en/ecs-logging/overview/current/intro.html][ECS Logging]] for logs, using [[https://www.elastic.co/guide/en/ecs-logging/go-logrus/current/setup.html][ECS Logging with logrus]]
 - Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format.
 - Many fields are not set like in Java-Applications. Therefore at least the fields ~service.name~ and ~event.dataset~ are added. Further fields from [[https://www.elastic.co/guide/en/ecs-logging/java/current/setup.html][Java-Setup]] might be added
-- Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]]
+- Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]] and additional sent via OTLP
 - The [[https://opentelemetry.io/docs/zero-code/go/][Go zero-code instrumentation]] did not work, so the [[https://opentelemetry.io/docs/languages/go/instrumentation/][manual instrumentation]] based on the [[https://opentelemetry.io/docs/languages/go/getting-started/][Getting Started guide]] is used
 
 **** APIs

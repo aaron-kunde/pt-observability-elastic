@@ -70,5 +70,5 @@ func Send(ctx context.Context, apiName string, data uint64) {
 	if err != nil {
 		log.Error("Failed to write messages:", err)
 	}
-	kafkaProducer.topicCounter.Increment()
+	kafkaProducer.topicCounter.Increment(ctx)
 }

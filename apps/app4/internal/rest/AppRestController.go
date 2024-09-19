@@ -25,7 +25,7 @@ func RegisterApiHandler() {
 
 		var apiName = "API 1"
 		log.Info(fmt.Sprintf("Calling %s", apiName))
-		api1Counter.Increment()
+		api1Counter.Increment(ctx)
 
 		var count = api1Counter.Count()
 		kafka.Send(ctx, apiName, count)
@@ -39,7 +39,7 @@ func RegisterApiHandler() {
 
 	http.HandleFunc("/api-2", func(writer http.ResponseWriter, request *http.Request) {
 		log.Info("Calling API 2")
-		api2Counter.Increment()
+		api2Counter.Increment(request.Context())
 
 		// Must be called, before writing a diffferent response
 		err := errors.New("An unexpected error occurred")
@@ -52,7 +52,7 @@ func RegisterApiHandler() {
 		defer span.End()
 
 		log.Info("Calling API 3")
-		api3Counter.Increment()
+		api3Counter.Increment(request.Context())
 
 		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-3: %d", api3Counter.Count())}
 		db.Save(ctx, dataEntity)

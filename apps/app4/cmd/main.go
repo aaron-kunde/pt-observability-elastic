@@ -14,8 +14,9 @@ var port = 8084
 
 func main() {
 	log.Info("Starting App using Go. Listening on port: ", port)
-	traces.SetupOTelSDK(context.Background())
-	metrics.Init()
+	ctx := context.Background()
+	traces.Init(ctx)
+	metrics.Init(ctx)
 
 	rest.RegisterApiHandler()
 

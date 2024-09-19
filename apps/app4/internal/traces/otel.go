@@ -12,9 +12,9 @@ import (
 	log "pt.observability.elastic/app4/internal/logging"
 )
 
-func SetupOTelSDK(ctx context.Context) {
+func Init(ctx context.Context) {
 	otel.SetTextMapPropagator(propagation.TraceContext{})
-	otel.SetTracerProvider(newTraceProvider(newExporter(ctx)))
+	otel.SetTracerProvider(newProvider(newExporter(ctx)))
 }
 
 func newExporter(ctx context.Context) sdktrace.SpanExporter {
@@ -24,7 +24,7 @@ func newExporter(ctx context.Context) sdktrace.SpanExporter {
 		endpoint = "localhost:8200"
 	}
 	// Your preferred exporter: console, jaeger, zipkin, OTLP, etc.
-	traceExporter, err := otlptracehttp.New(
+	exporter, err := otlptracehttp.New(
 		ctx,
 		otlptracehttp.WithInsecure(),
 		otlptracehttp.WithEndpoint(endpoint),
@@ -33,16 +33,15 @@ func newExporter(ctx context.Context) sdktrace.SpanExporter {
 	if err != nil {
 		log.Error(err)
 	}
-	return traceExporter
+	return exporter
 }
 
-func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
+func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	// Ensure default SDK resources and the required service name are set.
 	r, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			//			semconv.ServiceName(initApplicationName()),
 		),
 	)
 
@@ -50,7 +49,7 @@ func newTraceProvider(exp sdktrace.SpanExporter) *sdktrace.TracerProvider {
 		log.Error(err)
 	}
 	return sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(exp),
+		sdktrace.WithBatcher(exporter),
 		sdktrace.WithResource(r),
 	)
 }
