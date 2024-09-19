@@ -1,7 +1,9 @@
 package db
 
 import (
+	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -13,9 +15,12 @@ type DataRepository struct {
 	db *gorm.DB
 }
 
-var repository = DataRepository{
-	db: initDBSession(),
-}
+var (
+	repository = DataRepository{
+		db: initDBSession(),
+	}
+	tracer = otel.Tracer("")
+)
 
 func initDBSession() *gorm.DB {
 	if os.Getenv("GORM_DRIVER") == "postgres" {
@@ -85,7 +90,10 @@ func initPostgreSQLSession() *gorm.DB {
 	return db
 }
 
-func Save(entity DataEntity) {
+func Save(ctx context.Context, entity DataEntity) {
+	ctx, span := tracer.Start(ctx, "DataRepository#Save")
+	defer span.End()
+
 	result := repository.db.Create(&entity)
 
 	if result.Error != nil {

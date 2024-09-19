@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/segmentio/kafka-go"
+	"go.opentelemetry.io/otel"
 	"os"
 	log "pt.observability.elastic/app4/internal/logging"
 	"pt.observability.elastic/app4/internal/metrics"
@@ -16,6 +17,7 @@ type Producer struct {
 }
 
 var (
+	tracer          = otel.Tracer("")
 	topicOutName    = "topic4"
 	applicationName = initApplicationName()
 	kafkaProducer   = Producer{
@@ -50,7 +52,10 @@ func initConnection() *kafka.Conn {
 	return conn
 }
 
-func Send(apiName string, data uint64) {
+func Send(ctx context.Context, apiName string, data uint64) {
+	_, span := tracer.Start(ctx, "KafkaProducer#Send")
+	defer span.End()
+
 	log.Info(fmt.Sprintf("Send data to topic %s: %d", topicOutName, data))
 
 	err := kafkaProducer.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))

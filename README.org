@@ -120,7 +120,7 @@ The following applications describe different setups and scenarios:
 | App1 | Java Spring Boot | Logback | raw            | Spring Actuator JSON              | APM Agent           |
 | App2 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON + Prometheus | APM Agent           |
 | App3 | Java Spring Boot | Logback | ECS Logging    | Spring Actuator JSON              | OpenTelemetry Agent |
-| App4 | Go               | Logrus  | ECS Logging    | Prometheus                        |                     |
+| App4 | Go               | Logrus  | ECS Logging    | Prometheus                        | Opentelemetry       |
 Each application is deployed as a variant either connected to a MySQL or PostgreSQL database.
 
 *** App1
@@ -1309,7 +1309,6 @@ Like in App2 ~error.message~, ~error.stack_trace~ and ~error.type~ are set. Addi
     }
   }
 #+end_src
-                                                                                                                                                                                               |
 
 *** App4
 A simple Go application:
@@ -1317,10 +1316,11 @@ A simple Go application:
 - Logs are written in the default format to stdout like in App1 and to a file in ECS JSON format.
 - Many fields are not set like in Java-Applications. Therefore at least the fields ~service.name~ and ~event.dataset~ are added. Further fields from [[https://www.elastic.co/guide/en/ecs-logging/java/current/setup.html][Java-Setup]] might be added
 - Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]]
+- The [[https://opentelemetry.io/docs/zero-code/go/][Go zero-code instrumentation]] did not work, so the [[https://opentelemetry.io/docs/languages/go/instrumentation/][manual instrumentation]] based on the [[https://opentelemetry.io/docs/languages/go/getting-started/][Getting Started guide]] is used
 
 **** APIs
 ***** Success
-The following call writes a message to Kafka topic ~topic3~:
+The following call writes a message to Kafka topic ~topic4~:
 #+begin_src shell
   curl localhost:8184/api-1
 #+end_src

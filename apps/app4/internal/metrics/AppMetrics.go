@@ -3,6 +3,8 @@ package metrics
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"net/http"
 	"os"
 )
 
@@ -31,13 +33,17 @@ func NewCounter(name string, labels map[string]string) Counter {
 		cnt: 0,
 		promCounter: promauto.NewCounter(prometheus.CounterOpts{
 			Name:        name,
-			Namespace:   initApplicationName(),
+			Namespace:   applicationName(),
 			ConstLabels: labels,
 		}),
 	}
 }
 
-func initApplicationName() string {
+func Init() {
+	http.Handle("/actuator/prometheus", promhttp.Handler())
+}
+
+func applicationName() string {
 	var applicationName = os.Getenv("SERVICE_NAME")
 
 	if applicationName == "" {
