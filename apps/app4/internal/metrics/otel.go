@@ -28,7 +28,7 @@ func newExporter(ctx context.Context) sdkmetric.Exporter {
 	)
 
 	if err != nil {
-		log.Error(err)
+		log.Error(nil, err)
 	}
 	return exporter
 }

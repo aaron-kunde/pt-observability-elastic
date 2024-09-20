@@ -50,7 +50,7 @@ func initMySqlDBSession() *gorm.DB {
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 
 	if err != nil {
-		log.Error(err)
+		log.Error(nil, err)
 	}
 	return db
 }
@@ -85,7 +85,7 @@ func initPostgreSQLSession() *gorm.DB {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Error(err)
+		log.Error(nil, err)
 	}
 	return db
 }
@@ -97,6 +97,6 @@ func Save(ctx context.Context, entity DataEntity) {
 	result := repository.db.Create(&entity)
 
 	if result.Error != nil {
-		log.Error(result.Error)
+		log.Error(ctx, result.Error)
 	}
 }

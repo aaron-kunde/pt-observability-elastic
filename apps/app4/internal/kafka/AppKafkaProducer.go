@@ -47,28 +47,28 @@ func initConnection() *kafka.Conn {
 	conn, err := kafka.DialLeader(context.Background(), "tcp", address, topicOutName, partition)
 
 	if err != nil {
-		log.Error("Failed to dial leader:", err)
+		log.Error(nil, "Failed to dial leader:", err)
 	}
 	return conn
 }
 
 func Send(ctx context.Context, apiName string, data uint64) {
-	_, span := tracer.Start(ctx, "KafkaProducer#Send")
+	ctx, span := tracer.Start(ctx, "KafkaProducer#Send")
 	defer span.End()
 
-	log.Info(fmt.Sprintf("Send data to topic %s: %d", topicOutName, data))
+	log.Info(ctx, fmt.Sprintf("Send data to topic %s: %d", topicOutName, data))
 
 	err := kafkaProducer.conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 
 	if err != nil {
-		log.Error("Failed to set deadline:", err)
+		log.Error(ctx, "Failed to set deadline:", err)
 	}
 	_, err = kafkaProducer.conn.WriteMessages(
 		kafka.Message{Value: []byte(fmt.Sprintf("%s;%s;data:%d", applicationName, apiName, data))},
 	)
 
 	if err != nil {
-		log.Error("Failed to write messages:", err)
+		log.Error(ctx, "Failed to write messages:", err)
 	}
 	kafkaProducer.topicCounter.Increment(ctx)
 }

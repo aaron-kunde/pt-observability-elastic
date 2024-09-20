@@ -13,7 +13,7 @@ import (
 var port = 8084
 
 func main() {
-	log.Info("Starting App using Go. Listening on port: ", port)
+	log.Info(nil, "Starting App using Go. Listening on port: ", port)
 	ctx := context.Background()
 	traces.Init(ctx)
 	metrics.Init(ctx)

@@ -1,9 +1,11 @@
 package logging
 
 import (
+	"context"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"go.elastic.co/ecslogrus"
+	"go.opentelemetry.io/otel/trace"
 	"os"
 )
 
@@ -45,18 +47,22 @@ func configureOutputFile() {
 	}
 }
 
-func Info(args ...interface{}) {
+func Info(ctx context.Context, args ...interface{}) {
+	traceID := trace.SpanContextFromContext(ctx).TraceID()
+
 	standardLogger.Info(args...)
-	fileLoggerEntry.Info(args...)
+	fileLoggerEntry.WithField("trace.id", traceID).Info(args...)
 }
 
-func Error(args ...interface{}) {
+func Error(ctx context.Context, args ...interface{}) {
+	traceID := trace.SpanContextFromContext(ctx).TraceID()
+
 	// Alternative: Distinct error loggers
 	standardLogger.SetReportCaller(true)
 	standardLogger.Error(args...)
 	standardLogger.SetReportCaller(false)
 
 	fileLogger.SetReportCaller(true)
-	fileLoggerEntry.Error(args...)
+	fileLoggerEntry.WithField("trace.id", traceID).Error(args...)
 	fileLogger.SetReportCaller(false)
 }

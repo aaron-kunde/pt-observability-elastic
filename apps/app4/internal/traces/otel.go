@@ -21,6 +21,7 @@ func Init(ctx context.Context) {
 
 func NewHTTPHandler() http.Handler {
 	return otelhttp.NewHandler(http.DefaultServeMux, "/")
+
 }
 
 func newExporter(ctx context.Context) sdktrace.SpanExporter {
@@ -37,7 +38,7 @@ func newExporter(ctx context.Context) sdktrace.SpanExporter {
 	)
 
 	if err != nil {
-		log.Error(err)
+		log.Error(nil, err)
 	}
 	return exporter
 }
@@ -52,7 +53,7 @@ func newProvider(exporter sdktrace.SpanExporter) *sdktrace.TracerProvider {
 	)
 
 	if err != nil {
-		log.Error(err)
+		log.Error(nil, err)
 	}
 	return sdktrace.NewTracerProvider(
 		sdktrace.WithBatcher(exporter),
