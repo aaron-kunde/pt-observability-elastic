@@ -20,5 +20,5 @@ func main() {
 
 	rest.RegisterApiHandler()
 
-	http.ListenAndServe(":"+strconv.Itoa(port), nil)
+	http.ListenAndServe(":"+strconv.Itoa(port), traces.NewHTTPHandler())
 }

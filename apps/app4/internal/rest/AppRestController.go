@@ -60,5 +60,4 @@ func RegisterApiHandler() {
 		// Write response
 		fmt.Fprintf(writer, "Hello, you've requested: %s\n", request.URL.Path)
 	})
-
 }

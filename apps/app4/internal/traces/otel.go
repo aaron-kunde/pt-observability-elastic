@@ -2,12 +2,14 @@ package traces
 
 import (
 	"context"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"net/http"
 	"os"
 	log "pt.observability.elastic/app4/internal/logging"
 )
@@ -15,6 +17,10 @@ import (
 func Init(ctx context.Context) {
 	otel.SetTextMapPropagator(propagation.TraceContext{})
 	otel.SetTracerProvider(newProvider(newExporter(ctx)))
+}
+
+func NewHTTPHandler() http.Handler {
+	return otelhttp.NewHandler(http.DefaultServeMux, "/")
 }
 
 func newExporter(ctx context.Context) sdktrace.SpanExporter {
