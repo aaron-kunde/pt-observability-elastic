@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"errors"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"os"
 	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/log"
@@ -43,7 +44,7 @@ func setupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTextMapPropagator(prop)
 
 	// Set up trace provider.
-	tracerProvider, err := newTraceProvider()
+	tracerProvider, err := newTraceProvider(ctx)
 	if err != nil {
 		handleErr(err)
 		return
@@ -52,7 +53,7 @@ func setupOTelSDK(ctx context.Context) (shutdown func(context.Context) error, er
 	otel.SetTracerProvider(tracerProvider)
 
 	// Set up meter provider.
-	meterProvider, err := newMeterProvider()
+	meterProvider, err := newMeterProvider(ctx)
 	if err != nil {
 		handleErr(err)
 		return
@@ -79,9 +80,8 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
-	traceExporter, err := stdouttrace.New(
-		stdouttrace.WithPrettyPrint())
+func newTraceProvider(ctx context.Context) (*trace.TracerProvider, error) {
+	traceExporter, err := newTraceExporter(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,8 +94,22 @@ func newTraceProvider() (*trace.TracerProvider, error) {
 	return traceProvider, nil
 }
 
-func newMeterProvider() (*metric.MeterProvider, error) {
-	metricExporter, err := stdoutmetric.New()
+func newTraceExporter(ctx context.Context) (trace.SpanExporter, error) {
+	var endpoint = os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+
+	if endpoint == "" {
+		endpoint = "localhost:8200"
+	}
+	// Your preferred exporter: console, jaeger, zipkin, OTLP, etc.
+	return otlptracehttp.New(
+		ctx,
+		otlptracehttp.WithInsecure(),
+		otlptracehttp.WithEndpoint(endpoint),
+	)
+}
+
+func newMeterProvider(ctx context.Context) (*metric.MeterProvider, error) {
+	metricExporter, err := newMetricsExporter(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -106,6 +120,20 @@ func newMeterProvider() (*metric.MeterProvider, error) {
 			metric.WithInterval(3*time.Second))),
 	)
 	return meterProvider, nil
+}
+
+func newMetricsExporter(ctx context.Context) (metric.Exporter, error) {
+	var endpoint = os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+
+	if endpoint == "" {
+		endpoint = "localhost:8200"
+	}
+
+	return otlpmetrichttp.New(
+		ctx,
+		otlpmetrichttp.WithInsecure(),
+		otlpmetrichttp.WithEndpoint(endpoint),
+	)
 }
 
 func newLoggerProvider() (*log.LoggerProvider, error) {
