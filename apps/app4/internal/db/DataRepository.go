@@ -7,6 +7,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/plugin/opentelemetry/tracing"
 	"os"
 	log "pt.observability.elastic/app4/internal/logging"
 )
@@ -23,11 +24,18 @@ var (
 )
 
 func initDBSession() *gorm.DB {
+	var db *gorm.DB
+
 	if os.Getenv("GORM_DRIVER") == "postgres" {
-		return initPostgreSQLSession()
+		db = initPostgreSQLSession()
 	} else {
-		return initMySqlDBSession()
+		db = initMySqlDBSession()
 	}
+	err := db.Use(tracing.NewPlugin())
+	if err != nil {
+		log.Error(nil, err)
+	}
+	return db
 }
 
 func initMySqlDBSession() *gorm.DB {
@@ -94,7 +102,7 @@ func Save(ctx context.Context, entity DataEntity) {
 	ctx, span := tracer.Start(ctx, "DataRepository#Save")
 	defer span.End()
 
-	result := repository.db.Create(&entity)
+	result := repository.db.WithContext(ctx).Create(&entity)
 
 	if result.Error != nil {
 		log.Error(ctx, result.Error)
