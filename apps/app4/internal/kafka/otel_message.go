@@ -1,10 +1,6 @@
 package kafka
 
-import (
-	"context"
-	"github.com/segmentio/kafka-go"
-	"go.opentelemetry.io/otel"
-)
+import "github.com/segmentio/kafka-go"
 
 type MessageCarrier struct {
 	msg *kafka.Message
@@ -43,8 +39,4 @@ func (c MessageCarrier) Keys() []string {
 		out[i] = h.Key
 	}
 	return out
-}
-
-func addTraceContext(ctx context.Context, msg *kafka.Message) {
-	otel.GetTextMapPropagator().Inject(ctx, NewMessageCarrier(msg))
 }

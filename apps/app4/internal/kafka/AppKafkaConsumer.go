@@ -50,6 +50,7 @@ func listenOnTopic(ctx context.Context, topic string) {
 			log.Error(ctx, err)
 			break
 		}
+		ctx, span := startSpan(ctx, &message)
 		log.Info(ctx, fmt.Sprintf("Fetch data from topic %s: %s=%s", topic, message.Key, message.Value))
 		topicCounter.Increment(ctx)
 
@@ -57,6 +58,7 @@ func listenOnTopic(ctx context.Context, topic string) {
 
 		response, _ := http.Get(restOutUrl)
 		log.Info(ctx, fmt.Sprintf("Call REST URL: %s, result: %s", restOutUrl, response))
+		span.End()
 	}
 
 	if err := reader.Close(); err != nil {
