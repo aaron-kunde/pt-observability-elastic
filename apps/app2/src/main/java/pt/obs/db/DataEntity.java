@@ -5,9 +5,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Setter
+@ToString
 public class DataEntity {
 
     @Id

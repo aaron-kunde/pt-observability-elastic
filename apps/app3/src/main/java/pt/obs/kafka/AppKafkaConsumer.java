@@ -15,9 +15,9 @@ import pt.obs.db.DataRepository;
 @Component
 public class AppKafkaConsumer {
 
-    private Counter topicCounter;
+    private final Counter topicCounter;
     private final DataRepository dataRepository;
-    private String restOutUrl;
+    private final String restOutUrl;
 
     AppKafkaConsumer(DataRepository dataRepository,
                      @Value("${metrics.counter.topic-in.name}") String topicCounterName,
@@ -27,16 +27,20 @@ public class AppKafkaConsumer {
         this.restOutUrl = restOutUrl;
     }
 
-    @KafkaListener(id="app3:1", topics = {"topic1", "topic3"})
+    @KafkaListener(id="app3:1", topics = {"topic1", "topic2", "topic4"})
     void listen(ConsumerRecord<String, String> record){
-        log.info(STR."Fetch data from topic \{record.topic()}: \{record.key()}=\{record.value()}");
+        log.info("Fetch data from topic {}: {}={}", record.topic(), record.key(), record.value());
         topicCounter.increment();
 
-        DataEntity data = new DataEntity();
-        data.setData(STR."AppKafkaConsumer: \{topicCounter.count()}");
-        log.info(STR."Write data to database: \{data}");
-        dataRepository.save(data);
+        save("AppKafkaConsumer: " + topicCounter.count());
 
-        log.info(STR."Call REST URL: \{restOutUrl}, result: \{RestClient.create(restOutUrl).get().retrieve().toEntity(String.class)}");
+        log.info("Call REST URL: {}, result: {}", restOutUrl, RestClient.create(restOutUrl).get().retrieve().toEntity(String.class));
+    }
+
+    private void save(String data) {
+        DataEntity entity = new DataEntity();
+        entity.setData(data);
+        log.info("Write data to database: {}", entity);
+        dataRepository.save(entity);
     }
 }

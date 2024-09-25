@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"go.opentelemetry.io/otel"
@@ -32,9 +33,6 @@ func RegisterApiHandler() {
 
 		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-1: %d", count)}
 		db.Save(ctx, dataEntity)
-
-		// Write response
-		fmt.Fprintf(writer, "Hello, you've requested: %s\n", request.URL.Path)
 	})
 
 	http.HandleFunc("/api-2", func(writer http.ResponseWriter, request *http.Request) {
@@ -57,10 +55,12 @@ func RegisterApiHandler() {
 		log.Info(ctx, "Calling API 3")
 		api3Counter.Increment(request.Context())
 
-		dataEntity := db.DataEntity{Data: fmt.Sprintf("AppRestController-3: %d", api3Counter.Count())}
-		db.Save(ctx, dataEntity)
-
-		// Write response
-		fmt.Fprintf(writer, "Hello, you've requested: %s\n", request.URL.Path)
+		save(ctx, fmt.Sprintf("AppRestController-3: %d", api3Counter.Count()))
 	})
+}
+
+func save(ctx context.Context, data string) {
+	dataEntity := db.DataEntity{Data: data}
+	log.Info(ctx, fmt.Sprintf("Write data to database: %s", dataEntity))
+	db.Save(ctx, dataEntity)
 }

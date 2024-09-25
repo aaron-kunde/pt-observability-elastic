@@ -35,15 +35,13 @@ class AppRestController {
     @GetMapping("/api-1")
     void api1() {
         String apiName = "API 1";
-        log.info(STR."Calling \{apiName}");
+        log.info("Calling {}", apiName);
         api1Counter.increment();
 
         double count = api1Counter.count();
         kafkaProducer.send(apiName, count);
 
-        DataEntity data = new DataEntity();
-        data.setData(STR."AppRestController-1: \{count}");
-        dataRepository.save(data);
+        save("AppRestController-1: " + count);
     }
 
     @GetMapping("/api-2")
@@ -57,11 +55,16 @@ class AppRestController {
     @GetMapping("/api-3")
     void api3() {
         String apiName = "API 3";
-        log.info(STR."Calling \{apiName}");
+        log.info("Calling {}", apiName);
         api3Counter.increment();
 
-        DataEntity data = new DataEntity();
-        data.setData(STR."AppRestController-3: \{api3Counter.count()}");
-        dataRepository.save(data);
+        save("AppRestController-3: " + api3Counter.count());
+    }
+
+    private void save(String data) {
+        DataEntity entity = new DataEntity();
+        entity.setData(data);
+        log.info("Write data to database: {}", entity);
+        dataRepository.save(entity);
     }
 }

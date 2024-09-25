@@ -262,7 +262,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.cj.jdbc.Driver
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL8Dialect
-      REST_OUT_URL: http://app1m:8081/api-3
+      REST_OUT_URL: http://app4m:8084/api-3
 
   app3p:
     image: app3:latest
@@ -287,7 +287,7 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
-      REST_OUT_URL: http://app1p:8081/api-3
+      REST_OUT_URL: http://app4p:8084/api-3
 
   app4m:
     image: app4:latest
@@ -308,6 +308,8 @@ services:
       GORM_DATASOURCE_PASSWORD: root
       OTEL_SERVICE_NAME: app4m
       OTEL_EXPORTER_OTLP_ENDPOINT: apm-server:8200
+      REST_OUT_URL: http://app1m:8081/api-3
+
   app4p:
     image: app4:latest
     ports:
@@ -328,6 +330,7 @@ services:
       GORM_HOST: postgres
       OTEL_SERVICE_NAME: app4p
       OTEL_EXPORTER_OTLP_ENDPOINT: apm-server:8200
+      REST_OUT_URL: http://app1m:8081/api-3
 
 volumes:
   app_logs:
