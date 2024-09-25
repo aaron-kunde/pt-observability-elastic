@@ -184,6 +184,7 @@ Traces and spans are even possible with Kafka topcis on the consumer site, becau
 - traceparent :: Like the W3C-Header. E.g. ~00-01010000000000000000000000000001-7226b7e159fb2a61-01~
 - elasticapmtraceparent :: Some specific header for Elastic. E.g. ~1103806595072~
 - tracestate :: An optional W3C-Header. Not always set. E.g. ~es=s:1~
+- Calls to metrics are monitored in APM as well, which should not be done
 
 **** Logs
 The following fields are set in the log messages:
@@ -574,7 +575,7 @@ Traces are handled like in App1:
 #+begin_src shell
   curl -H 'traceparent: 00-01020000000000000000000000000001-0000000000000001-01' localhost:8182/api-1
 #+end_src
-
+Calls to metrics are monitored in APM as well, which should not be done.
 In Kibana ~trace.id~ and ~trace.parent~ can be verified at /Observability/ -> /APM/ -> /Services/ -> /app2m/ -> /Transactions/ -> /AppRestController#app2m/
 
 ****** Logs
@@ -976,6 +977,7 @@ Traces have less information as in App1 or App2 (e.g. only ~http.request.method~
 #+begin_src shell
   curl -H 'traceparent: 00-01030000000000000000000000000001-0000000000000001-01' localhost:8183/api-1
 #+end_src
+Calls to metrics are monitored as well, which should not be done.
 
 **** Logs
 Like in App2, logs are structured and can be seen under APM. They are visible and can be correllated in APM. They have no ~trace.id~ or ~span.id~ but a ~trace_id~ and a ~span_id~. Additional a ~trace_flags~ is set, which shows the flags set in the ~traceparent~ W3C header. They have no field No ~service.version~:
@@ -1318,6 +1320,9 @@ A simple Go application:
 - Metrics are implemented, using [[https://prometheus.io/docs/guides/go-application/][Prometheus instrumentation]] and additional sent via OTLP
 - The [[https://opentelemetry.io/docs/zero-code/go/][Go zero-code instrumentation]] did not work, so the [[https://opentelemetry.io/docs/languages/go/instrumentation/][manual instrumentation]] based on the [[https://opentelemetry.io/docs/languages/go/getting-started/][Getting Started guide]] is used
 - Instrumentation of HTTP Requests with [[https://pkg.go.dev/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp][instrumentation library for net/http]]
+- Instrumentation of DB Queries with [[https://github.com/go-gorm/opentelemetry][Opentelemetry for gorm]]
+- Instrumentation of Kafka messages based on [[https://github.com/jurabek/otelkafka][OpenTelemetry Go Instrumentation for confluent-kafka-go]]
+- Added trace ids to logs with context passing
 
 **** APIs
 ***** Success
@@ -1355,10 +1360,152 @@ The result should be something like
 
 Since these metrics are presented all at once, they can be collected with Metricbeat and analysed in Kibana, using the ~metricbeat-*~ stream.
 
-**** TODO Traces
+**** Traces
+- Traces are set in HTTP-and DB-Requests through instrumentation libraries
+- Traces are set in Kafka-Messages through reimplementation of intstrumentation libraries:
+  - ~traceparent~ in message headers
+  - Propagation for Producer and consumer
+- Individual traces are set in application, using ~trace.id~
+- Everything is traced in this implementation, even the calls to prometheus, which should be excluded.
+
 #+begin_src shell
   curl -H 'traceparent: 00-01040000000000000000000000000001-0000000000000001-01' localhost:8184/api-1
 #+end_src
+
+***** Logs
+| Field              | Value                                 |
+|--------------------+---------------------------------------|
+| _id                | UvdfEJIBbet0FzGuKO_R                  |
+| _index             | .ds-filebeat-8.11.1-2024.09.20-000001 |
+| _score             | 0                                     |
+| @timestamp         | Sep 20, 2024 @ 18:58:38.979           |
+| agent.ephemeral_id | d0a4d67c-2706-4384-b741-4aa62f555e9c  |
+| agent.hostname     | cc2ca5ce39f9                          |
+| agent.id           | 26d1f1e4-6d3a-437b-8a66-27e26b1426b1  |
+| agent.name         | cc2ca5ce39f9                          |
+| agent.type         | filebeat                              |
+| agent.version      | 8.11.1                                |
+| ecs.version        | 1.6.0                                 |
+| event.dataset      | app4m                                 |
+| host.name          | cc2ca5ce39f9                          |
+| input.type         | filestream                            |
+| log.file.device_id | 2080                                  |
+| log.file.inode     | 6817023                               |
+| log.file.path      | /var/log/app_logs/app4m.log.json      |
+| log.level          | info                                  |
+| log.offset         | 1,888                                 |
+| message            | Send data to topic topic4: 2          |
+| service.name       | app4m                                 |
+| trace.id           | 01050000000000000000000000000001
+
+#+begin_src json
+  {
+  "_index": ".ds-filebeat-8.11.1-2024.09.20-000001",
+  "_id": "UvdfEJIBbet0FzGuKO_R",
+  "_version": 1,
+  "_score": 0,
+  "_source": {
+    "@timestamp": "2024-09-20T16:58:38.979Z",
+    "ecs": {
+      "version": "1.6.0"
+    },
+    "event": {
+      "dataset": "app4m"
+    },
+    "host": {
+      "name": "cc2ca5ce39f9"
+    },
+    "agent": {
+      "id": "26d1f1e4-6d3a-437b-8a66-27e26b1426b1",
+      "name": "cc2ca5ce39f9",
+      "type": "filebeat",
+      "version": "8.11.1",
+      "ephemeral_id": "d0a4d67c-2706-4384-b741-4aa62f555e9c"
+    },
+    "service": {
+      "name": "app4m"
+    },
+    "log": {
+      "level": "info",
+      "offset": 1888,
+      "file": {
+        "path": "/var/log/app_logs/app4m.log.json",
+        "device_id": "2080",
+        "inode": "6817023"
+      }
+    },
+    "input": {
+      "type": "filestream"
+    },
+    "trace": {
+      "id": "01050000000000000000000000000001"
+    },
+    "message": "Send data to topic topic4: 2"
+  },
+  "fields": {
+    "service.name": [
+      "app4m"
+    ],
+    "input.type": [
+      "filestream"
+    ],
+    "log.offset": [
+      1888
+    ],
+    "agent.hostname": [
+      "cc2ca5ce39f9"
+    ],
+    "message": [
+      "Send data to topic topic4: 2"
+    ],
+    "agent.type": [
+      "filebeat"
+    ],
+    "trace.id": [
+      "01050000000000000000000000000001"
+    ],
+    "@timestamp": [
+      "2024-09-20T16:58:38.979Z"
+    ],
+    "agent.id": [
+      "26d1f1e4-6d3a-437b-8a66-27e26b1426b1"
+    ],
+    "ecs.version": [
+      "1.6.0"
+    ],
+    "log.file.inode": [
+      "6817023"
+    ],
+    "log.file.device_id": [
+      "2080"
+    ],
+    "log.file.path": [
+      "/var/log/app_logs/app4m.log.json"
+    ],
+    "agent.ephemeral_id": [
+      "d0a4d67c-2706-4384-b741-4aa62f555e9c"
+    ],
+    "log.level": [
+      "info"
+    ],
+    "agent.name": [
+      "cc2ca5ce39f9"
+    ],
+    "agent.version": [
+      "8.11.1"
+    ],
+    "host.name": [
+      "cc2ca5ce39f9"
+    ],
+    "event.dataset": [
+      "app4m"
+    ]
+  }
+}
+#+end_src
+
+If ~trace.id~ is added to the logs, it is visible in APM under the trace / transaction.
+If ~service.name~ is added to the logs, it is visible in APM under the /Services/ /Logs/ tab
 
 **** Logs
 Logs are structured, like in App2. They have no ~trace.id~. The only ECS specific fields, which are added automatically are ~@timestamp~, ~ecs.version~, ~log.level~ and ~message~:
@@ -1493,7 +1640,7 @@ Further fields, like ~service.name~ or ~event.dataset~ had to be added as custom
 | event.dataset      | app4                                   |
 | service.name       | app4
 
-They are not visible in APM, since no APM connection exists and no data is in the ~apm~ indices.
+The logs are visible in APM, if those fields are set and APM is used.
 
 ***** Errors
 Following additional fields ~log.origin.file.line~, ~log.origin.file.name~ and ~log.origin.function~ (see: https://www.elastic.co/guide/en/ecs/8.11/ecs-log.html) are set:
