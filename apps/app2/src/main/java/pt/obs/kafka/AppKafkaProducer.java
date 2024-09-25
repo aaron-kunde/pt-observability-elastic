@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AppKafkaProducer {
 
-    private Counter topicCounter;
+    private final Counter topicCounter;
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Value("${kafka.topic-out.name}") String topicOutName;
@@ -24,7 +24,7 @@ public class AppKafkaProducer {
 
     public void send(String apiName, double data) {
         log.info("Send data to topic {}: {}", topicOutName, data);
-        kafkaTemplate.send(topicOutName, "applicationName" + ';' + apiName + ";data:" + data);
+        kafkaTemplate.send(topicOutName, applicationName + ';' + apiName + ";data:" + data);
         topicCounter.increment();
     }
 }

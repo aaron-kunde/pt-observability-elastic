@@ -24,7 +24,7 @@ public class AppKafkaProducer {
 
     public void send(String apiName, double data) {
         log.info("Send data to topic {}: {}", topicOutName, data);
-        kafkaTemplate.send(topicOutName, "applicationName" + ';' + apiName + ";data:" + data);
+        kafkaTemplate.send(topicOutName, applicationName + ';' + apiName + ";data:" + data);
         topicCounter.increment();
     }
 }
