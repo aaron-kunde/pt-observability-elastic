@@ -62,9 +62,11 @@ func Send(ctx context.Context, apiName string, data uint64) {
 	if err != nil {
 		log.Error(ctx, "Failed to set deadline:", err)
 	}
-	_, err = kafkaProducer.conn.WriteMessages(
-		kafka.Message{Value: []byte(fmt.Sprintf("%s;%s;data:%d", applicationName, apiName, data))},
-	)
+	message := kafka.Message{Value: []byte(fmt.Sprintf("%s;%s;data:%d", applicationName, apiName, data))}
+
+	addTraceContext(ctx, &message)
+
+	_, err = kafkaProducer.conn.WriteMessages(message)
 
 	if err != nil {
 		log.Error(ctx, "Failed to write messages:", err)
